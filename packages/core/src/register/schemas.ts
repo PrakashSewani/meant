@@ -1,0 +1,43 @@
+import { z } from 'zod';
+
+export const LengthSchema = z.enum(['short', 'medium', 'long']);
+
+export const EffortSchema = z.enum(['quick', 'balanced', 'deep']);
+
+export const RegisterSchema = z.object({
+  who: z.string().min(1).optional(),
+  tone: z.array(z.string().min(1)).optional(),
+  format: z.string().min(1).optional(),
+  length: LengthSchema.optional(),
+});
+
+export const TransformRequestSchema = z.object({
+  requestId: z.string().min(1),
+  intentText: z.string().min(1),
+  mode: z.enum(['polish', 'compose']),
+  register: RegisterSchema,
+  effort: EffortSchema,
+  recipeId: z.string().min(1).optional(),
+});
+
+export const PortRequestSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('transform'), request: TransformRequestSchema }),
+  z.object({ type: z.literal('cancel'), requestId: z.string().min(1) }),
+]);
+
+export const StreamEventSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('chunk'), requestId: z.string().min(1), text: z.string() }),
+  z.object({ type: z.literal('done'), requestId: z.string().min(1) }),
+  z.object({
+    type: z.literal('error'),
+    requestId: z.string().min(1),
+    kind: z.enum(['auth', 'cors', 'rate_limit', 'quota', 'model_missing', 'network']),
+    message: z.string().min(1),
+  }),
+]);
+
+export const InvokeMessageSchema = z.object({ type: z.literal('invoke-bar') });
+
+export type TransformRequest = z.infer<typeof TransformRequestSchema>;
+export type PortRequest = z.infer<typeof PortRequestSchema>;
+export type StreamEvent = z.infer<typeof StreamEventSchema>;

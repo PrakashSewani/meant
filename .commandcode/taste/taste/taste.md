@@ -1,4 +1,5 @@
 # Taste
+
 - Wants the agent to act as a critical thinking partner — challenge assumptions, surface weaknesses and better alternatives, and rethink the idea where it can be materially improved — rather than literally implementing the brief as written. Confidence: 0.9
 - Treats their own wording, terminology, and early name/naming ideas as open to revision ("do not assume my wording... is correct"). Confidence: 0.85
 - When the agent surfaces open questions, expects it to also state its own recommended answer and make the call ("suggest something") rather than bounce decisions back to them. Confidence: 0.6

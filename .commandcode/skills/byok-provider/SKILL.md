@@ -22,9 +22,9 @@ Read [docs/PROVIDERS.md](../../../docs/PROVIDERS.md) and the hard invariants in
 1. **Pick the transport.** Exactly two exist:
    - Provider speaks the Anthropic Messages API (`/v1/messages`) → `anthropic`.
    - Provider is OpenAI-shaped (`/v1/chat/completions`) → `openai-compatible`.
-   If a provider offers both, prefer `openai-compatible` unless it is Anthropic itself.
-   Record the choice in the preset's `npm` field: `@ai-sdk/anthropic` or
-   `@ai-sdk/openai-compatible`.
+     If a provider offers both, prefer `openai-compatible` unless it is Anthropic itself.
+     Record the choice in the preset's `npm` field: `@ai-sdk/anthropic` or
+     `@ai-sdk/openai-compatible`.
 
 2. **Add the preset** to `packages/config/src/presets.ts`, following the existing shape:
 

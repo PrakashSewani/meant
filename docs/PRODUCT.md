@@ -3,7 +3,7 @@
 > **Sayable** — write it messy, say it right, everywhere.
 > Codename: `meant` (the repo). See [NAMING.md](./NAMING.md) for why the working name changed.
 
-## 1. The reframe: this is a *register* problem, not a writing problem
+## 1. The reframe: this is a _register_ problem, not a writing problem
 
 The instinct is to call this "an AI writing assistant." That framing is a trap. It puts you in
 a crowded category (Grammarly, Monica, Sider, ChatGPT sidebars) and it describes the wrong job.
@@ -11,7 +11,7 @@ a crowded category (Grammarly, Monica, Sider, ChatGPT sidebars) and it describes
 The real failure mode is not bad grammar. It is **register**: the same meaning has to be
 expressed differently for a manager, a friend, a customer, a Jira ticket, a public LinkedIn
 post, and a bug report. You know exactly what you want to say. You do not know how to say it
-*here* — and the cost of getting it wrong is social and professional risk.
+_here_ — and the cost of getting it wrong is social and professional risk.
 
 So the product is not a grammar checker and not a chatbot. It is a **register layer** between
 what you mean and what you send. One thought, many voices. You supply the meaning in your own
@@ -22,13 +22,13 @@ without a chat thread.
 
 ## 2. Why the incumbents lose this job
 
-| Approach | What it optimizes | Why it fails here |
-| --- | --- | --- |
-| **Grammarly** | Correctness + tone nudges | Tells you *what's wrong*. Still makes you do the writing, and it optimizes surface, not register. |
-| **ChatGPT / Claude web** | General reasoning | Context lives in a separate tab. You copy the situation out, paste the result back. Friction is the product. |
-| **Monica / Sider / sidebars** | A chat box on every page | A *second* place to think. You still write the prompt, still copy/paste, still context-switch. |
-| **Raycast AI / launchers** | Power-user commands | Keyboard-elite, not in the field, not aware of the page's social context. |
-| **Notion/Gmail AI** | In-app generation | Trapped in one app. Inconsistent everywhere else. |
+| Approach                      | What it optimizes         | Why it fails here                                                                                            |
+| ----------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **Grammarly**                 | Correctness + tone nudges | Tells you _what's wrong_. Still makes you do the writing, and it optimizes surface, not register.            |
+| **ChatGPT / Claude web**      | General reasoning         | Context lives in a separate tab. You copy the situation out, paste the result back. Friction is the product. |
+| **Monica / Sider / sidebars** | A chat box on every page  | A _second_ place to think. You still write the prompt, still copy/paste, still context-switch.               |
+| **Raycast AI / launchers**    | Power-user commands       | Keyboard-elite, not in the field, not aware of the page's social context.                                    |
+| **Notion/Gmail AI**           | In-app generation         | Trapped in one app. Inconsistent everywhere else.                                                            |
 
 Every one of them makes you **learn prompt engineering** or **leave the text box**. Sayable's
 whole reason to exist is that it does neither: it meets the text where it already is and asks
@@ -36,8 +36,8 @@ only for the intent, not a prompt.
 
 ## 3. The core insight
 
-> You already know what you want to say. You don't know how to say it to *this* audience, in
-> *this* channel, at *this* level of formality and detail.
+> You already know what you want to say. You don't know how to say it to _this_ audience, in
+> _this_ channel, at _this_ level of formality and detail.
 
 Two consequences drive the entire product:
 
@@ -46,7 +46,7 @@ Two consequences drive the entire product:
    register selection.
 2. **Register is mostly inferable.** The app you're in, the field's label, the conversation
    thread, whether it's a comment box or a DM, whether a recipient name is visible — these
-   *are* the register. Configuration should be a **correction**, never a form.
+   _are_ the register. Configuration should be a **correction**, never a form.
 
 ## 4. Principles
 
@@ -69,11 +69,11 @@ These are ranked. When two conflict, the lower number wins.
 
 ## 5. Vocabulary (define it once, use it everywhere)
 
-The product's language *is* the product. We do not inherit the user's jargon or ours; we pick
+The product's language _is_ the product. We do not inherit the user's jargon or ours; we pick
 terms that map to the mental model.
 
 - **Intent** — the raw, messy, natural thing the user types. Not a prompt. Not a draft. Intent.
-- **Register** — the bundle of *audience + tone + format + length* that a piece of writing has
+- **Register** — the bundle of _audience + tone + format + length_ that a piece of writing has
   to match. The unit of our intelligence.
 - **Transform** — turning an Intent into text that fits a Register.
 - **Recipe** — a named, reusable Register + instruction bundle ("Jira user story", "Reply to a
@@ -81,8 +81,8 @@ terms that map to the mental model.
 - **Register Bar** — the floating surface that appears near the selection.
 - **Voice** — the user's learned style memory, stored locally. Makes output sound like them.
 - **Correction** — a chip the user overrides before accepting. Corrections are the only
-  "training" the product needs, and they stay on the device (see *register memory*).
-- **Effort** — how much reasoning/cost a transform spends: *Quick · Balanced · Deep*.
+  "training" the product needs, and they stay on the device (see _register memory_).
+- **Effort** — how much reasoning/cost a transform spends: _Quick · Balanced · Deep_.
 - **As** — the bar's label for **format**. One concept, one name in docs, one label in the UI.
 
 Notice what's **absent**: "prompt," "temperature," "system message," "chat." Those are
@@ -93,14 +93,14 @@ implementation words, and exposing them is the failure we're avoiding.
 **Primary — "the fluent-adjacent professional."** Engineers, PMs, designers, support and sales
 people who communicate constantly in writing and feel the friction: the Slack message they
 rewrite four times, the Jira ticket they dread, the LinkedIn post they never publish, the
-customer email they over-think. They are competent writers who are *slow* because register
+customer email they over-think. They are competent writers who are _slow_ because register
 switching taxes them. They already pay for AI tools and would happily bring their own key.
 
 **Secondary — "the non-native speaker."** Highly capable, but every professional message is a
 register calculation. For them, the register layer is the difference between being heard and
 being misread.
 
-**Tertiary — "the privacy-constrained team."** People who *cannot* paste work context into a
+**Tertiary — "the privacy-constrained team."** People who _cannot_ paste work context into a
 hosted chat product. BYOK + local models + local-only storage turns them from non-users into
 users.
 
@@ -116,7 +116,7 @@ prompt the user never sees).
 
 Layers, in order of leverage:
 
-1. **Context inference** — read the *surface*: site/app, field role (comment, DM, issue body,
+1. **Context inference** — read the _surface_: site/app, field role (comment, DM, issue body,
    commit message, email compose), placeholder/label text, visible recipient, thread
    participants, form structure. Output: a best-guess Register.
 2. **Register memory** — a local prior learned from the corrections you accept, keyed by surface
@@ -141,8 +141,8 @@ one-time curiosity, not a recurring pain. What makes Sayable sticky:
   Slack message" (dozens of times a day).
 - **Muscle memory.** One shortcut, the same gesture in every app. It becomes a reflex, not a
   destination.
-- **It gets *better* at being you.** Voice memory and register memory mean month three is
-  noticeably better than day one — and better *in each specific room* — a retention mechanic no
+- **It gets _better_ at being you.** Voice memory and register memory mean month three is
+  noticeably better than day one — and better _in each specific room_ — a retention mechanic no
   stateless wrapper has.
 - **Cost and trust you control.** BYOK + local option + no server means no surprise bills, no
   vendor lock-in, and no "where did my data go."
@@ -158,7 +158,7 @@ Saying no is the strategy. Not in v1:
 - No team dashboards, analytics, or admin console.
 - No summarization of arbitrary pages or browsing agent.
 - No mobile apps, no desktop app (browser only).
-- No *required* hosted tier — BYOK and local are the default and the free path forever. An
+- No _required_ hosted tier — BYOK and local are the default and the free path forever. An
   optional hosted tier with free trials is planned post-traction; see [ROADMAP.md](./ROADMAP.md).
 - No marketplace. Recipes are local until they're proven.
 
@@ -167,7 +167,7 @@ Saying no is the strategy. Not in v1:
 - **Activation:** % of installs where a transform is accepted within the first session.
 - **The real metric — repeat:** transforms accepted per active day, and % of active days with
   ≥3 accepts (habit formation, not novelty).
-- **Quality:** accept rate (accepted / generated) and *edit-then-accept* rate (proxy for "close
+- **Quality:** accept rate (accepted / generated) and _edit-then-accept_ rate (proxy for "close
   but not me").
 - **Trust:** % of users on local/custom providers; zero unexplained network calls.
 - **Retention:** week-4 retention of users who have accepted ≥10 transforms.

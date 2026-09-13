@@ -17,7 +17,7 @@ a LinkedIn post, or a one-line message to a friend. Same meaning, different regi
 
 The problem isn't grammar. It's **register** — knowing how to say the same thing to a manager
 versus a friend versus a customer. You already know what you want to say; you don't know how to
-phrase it *here*. Existing tools make it worse: Grammarly tells you what's wrong (you still
+phrase it _here_. Existing tools make it worse: Grammarly tells you what's wrong (you still
 write it), and ChatGPT-style sidebars make you leave the text box, copy the situation out, and
 paste the answer back.
 
@@ -30,10 +30,10 @@ for you.
 
 - **No chat box.** The output is a diff you accept, not a transcript you read. Refinement is
   inline chips ("shorter", "softer", "less formal"), not a conversation.
-- **No prompt engineering.** You answer *Who · Tone · Format · Length* — and every one is
+- **No prompt engineering.** You answer _Who · Tone · Format · Length_ — and every one is
   pre-filled by inference from the page, so most transforms are a single click.
 - **It infers the register.** The app, the field, the thread, the recipient, the placeholder —
-  those *are* the register. Configuration is a correction, not a form.
+  those _are_ the register. Configuration is a correction, not a form.
 - **It sounds like you — and learns each room.** A local Voice profile plus register memory (the
   chips you correct) make output indistinguishable from you at your best, and better in month
   three than day one.
@@ -63,16 +63,16 @@ contract are specified in [`docs/`](./docs). Implementation is next — see
 
 ## Documentation
 
-| Doc | What's in it |
-| --- | --- |
-| [docs/PRODUCT.md](./docs/PRODUCT.md) | Thesis, principles, personas, differentiation, non-goals. |
-| [docs/EXPERIENCE.md](./docs/EXPERIENCE.md) | The core interaction, the Register Bar, inference, recipes, surfaces. |
-| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | MV3 components, data flow, security, permissions, repo structure. |
-| [docs/PROVIDERS.md](./docs/PROVIDERS.md) | BYOK config (OpenCode-compatible), providers, tiers, key storage. |
-| [docs/ROADMAP.md](./docs/ROADMAP.md) | Milestones, scope cuts, risk register. |
-| [docs/NAMING.md](./docs/NAMING.md) | Identity and the name decision record. |
-| [docs/DECISIONS.md](./docs/DECISIONS.md) | Decision log: key custody, deferred hosted tier, transports. |
-| [AGENTS.md](./AGENTS.md) | Conventions for humans and AI agents working in this repo. |
+| Doc                                            | What's in it                                                          |
+| ---------------------------------------------- | --------------------------------------------------------------------- |
+| [docs/PRODUCT.md](./docs/PRODUCT.md)           | Thesis, principles, personas, differentiation, non-goals.             |
+| [docs/EXPERIENCE.md](./docs/EXPERIENCE.md)     | The core interaction, the Register Bar, inference, recipes, surfaces. |
+| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | MV3 components, data flow, security, permissions, repo structure.     |
+| [docs/PROVIDERS.md](./docs/PROVIDERS.md)       | BYOK config (OpenCode-compatible), providers, tiers, key storage.     |
+| [docs/ROADMAP.md](./docs/ROADMAP.md)           | Milestones, scope cuts, risk register.                                |
+| [docs/NAMING.md](./docs/NAMING.md)             | Identity and the name decision record.                                |
+| [docs/DECISIONS.md](./docs/DECISIONS.md)       | Decision log: key custody, deferred hosted tier, transports.          |
+| [AGENTS.md](./AGENTS.md)                       | Conventions for humans and AI agents working in this repo.            |
 
 ## Architecture at a glance
 
@@ -100,9 +100,9 @@ Sayable's config is a subset of `opencode.json`, so a config you already maintai
   "small_model": "anthropic/claude-haiku-4-5",
   "provider": {
     "anthropic": {
-      "options": { "baseURL": "https://api.anthropic.com/v1" }
-    }
-  }
+      "options": { "baseURL": "https://api.anthropic.com/v1" },
+    },
+  },
 }
 ```
 

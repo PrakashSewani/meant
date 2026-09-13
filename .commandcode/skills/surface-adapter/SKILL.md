@@ -6,7 +6,7 @@ description: Add support for a new site or app in Sayable by implementing a Surf
 # Add a surface adapter
 
 Sayable is **one product, not nine integrations**. The universal adapter handles all editable
-fields; a site adapter only improves *inference*. It must never add behavior, and it must never
+fields; a site adapter only improves _inference_. It must never add behavior, and it must never
 be required for the product to work.
 
 ## Before you start
@@ -23,11 +23,15 @@ interface SurfaceAdapter {
   matches(url: URL): boolean;
   findEditable(el: Element): Editable | null;
   read(el: Editable): string;
-  write(el: Editable, text: string): boolean;   // MUST preserve native undo
-  replaceRange(el: Editable, range: Range, text: string): boolean;
-  getSelection(el: Editable): { text: string; range: Range } | null;
-  inferContext(el: Editable): RegisterHints;    // the whole point of a site adapter
+  write(el: Editable, text: string): boolean; // MUST preserve native undo
+  replaceSelection(el: Editable, selection: SelectionInfo, text: string): boolean;
+  getSelection(el: Editable): SelectionInfo | null;
+  inferContext(el: Editable): RegisterHints; // the whole point of a site adapter
 }
+
+// Form fields have no DOM text node to anchor a Range to, so they carry offsets; rich editors
+// carry the live DOM range. Exactly one shape is present.
+type SelectionInfo = { text: string; start?: number; end?: number; range?: Range };
 ```
 
 ## Steps
@@ -49,7 +53,7 @@ interface SurfaceAdapter {
    - nearby labels/placeholders
    - thread text, if visible (marked for opt-in before it is ever sent)
    - a formality prior for the site
-   Return `{}` when unsure — inference is a best guess the UI can correct, never a requirement.
+     Return `{}` when unsure — inference is a best guess the UI can correct, never a requirement.
 
 5. **Implement reads/writes through the shared text-write helper.** Never use `execCommand`.
    Never replace `innerHTML`. After any write, assert the field is still undoable.

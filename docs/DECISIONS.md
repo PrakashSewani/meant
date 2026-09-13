@@ -7,10 +7,10 @@ storage, privacy, architecture, or roadmap scope. Newest first.
 
 **Date:** 2026-09-13 · **Status:** Accepted
 
-**Decision.** Learn the user's *register* corrections locally, the same way Voice learns style.
+**Decision.** Learn the user's _register_ corrections locally, the same way Voice learns style.
 When a user overrides a chip before accepting (Tone: casual → direct; Who: channel → manager),
 record the delta keyed by (surface, field role, recipient class). On later invokes in that
-context, apply the prior and show it in the chip (*"direct — you usually pick this here"*), with
+context, apply the prior and show it in the chip (_"direct — you usually pick this here"_), with
 a per-item reset. A prior needs two observations before it applies, and decays over time.
 
 **Why.** The moat is inference, not model access. Heuristics shipped once are copyable; priors
@@ -18,6 +18,7 @@ that converge on the user's own corrections are not. It is also cheap — a smal
 counts, no ML, no network — and it raises accept rate without touching prompt quality.
 
 **Consequences.**
+
 - New local store `sayable.priors`: capped, wipeable, never synced, never sent as data. Priors
   reach a prompt only as constraints, exactly like the Register and Voice.
 - Learned defaults are **visible and revocable**. A hidden learned default reads as a bug.
@@ -44,14 +45,15 @@ optional list and requesting one origin at a time keeps the granted surface narr
 declared set enumerable.
 
 **Consequences.**
+
 - Enabling a provider or a site shows a browser permission prompt. The copy must say what the
   origin is for — an unexplained prompt is a trust cost we pay deliberately, not accidentally.
 - v1 ships a curated provider list (Anthropic, OpenAI, OpenRouter, Groq, Gemini, and local
   Ollama / LM Studio / llama.cpp). "Any OpenAI-compatible endpoint" waits for v1.x and the same
   runtime-grant flow.
-- Sites outside the curated content-script list are enabled with a runtime grant *followed by*
+- Sites outside the curated content-script list are enabled with a runtime grant _followed by_
   `chrome.scripting.registerContentScripts` — never by broadening the static list.
-- Broadening the *declared* optional set to cover arbitrary origins is a separate decision with
+- Broadening the _declared_ optional set to cover arbitrary origins is a separate decision with
   Web Store review consequences; verify and record before submission.
 
 ## D-003 — Key custody: `chrome.storage.local` + optional encrypted vault
@@ -69,6 +71,7 @@ secrets.
 posture for zero user benefit (keys can't roam without breaking the "no cloud" promise anyway).
 
 **Consequences.**
+
 - Extension storage is **not a secure enclave**: anyone with profile/filesystem access or devtools
   on the extension can read it. Documented, not hidden; local models and BYO-gateways are the
   answer for high-sensitivity users.
@@ -91,17 +94,18 @@ the product is unproven, and stops auth/recovery/key-custody/abuse work from dom
 distracting from the register engine — the actual differentiator.
 
 **Consequences.**
-- Docs say **"no backend required"**, not "zero backend": the hosted tier is *another provider
-  behind the same interface* (`sayable`), never a requirement, and never disables BYOK or local.
+
+- Docs say **"no backend required"**, not "zero backend": the hosted tier is _another provider
+  behind the same interface_ (`sayable`), never a requirement, and never disables BYOK or local.
 - Any future sync is E2E-encrypted and opt-in per data class; secrets and Voice never sync in
   plaintext.
 - "No telemetry by default" holds. A hosted tier adds exactly one network destination (our
   endpoint) with **user-visible metering**, disclosed and `host_permissions`-scoped. It is the
-  *only* new outbound destination permitted.
+  _only_ new outbound destination permitted.
 - **Anti-lock-in:** the hosted provider is a preset like any other — never ranked by revenue,
   never a silent default, never gating a feature.
 
-**Revisit when:** the week-4 retention target is met *and* BYOK setup friction (not output
+**Revisit when:** the week-4 retention target is met _and_ BYOK setup friction (not output
 quality) is the top drop-off cause.
 
 ## D-001 — Two transports only: `anthropic` and `openai-compatible`

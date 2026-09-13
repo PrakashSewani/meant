@@ -1,0 +1,9 @@
+packages:
+  - apps/*
+  - packages/*
+
+minimumReleaseAgeExclude:
+  - zod@4.6.4
+
+onlyBuiltDependencies:
+  - esbuild

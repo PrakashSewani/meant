@@ -6,15 +6,15 @@ experience is identical across every site.
 
 ## 1. Stack decisions
 
-| Concern | Choice | Why |
-| --- | --- | --- |
-| Extension framework | **WXT** (Vite-based, MV3-first, cross-browser) | File-based entrypoints, HMR, typed manifest, Chrome + Firefox from one codebase. Replaces hand-rolled webpack. |
-| Language | **TypeScript**, strict | Non-negotiable for a security-sensitive, multi-provider codebase. |
-| UI | **React + Tailwind**, rendered inside a **closed Shadow DOM** | Style isolation from host pages; team familiarity. Vanilla is viable but slower to ship. |
-| Model layer | **Vercel AI SDK** (`ai`, `@ai-sdk/anthropic`, `@ai-sdk/openai-compatible`) | One interface over 75+ providers; matches the OpenCode mental model. Fetch-based, so it runs in a service worker. |
-| Validation | **Zod** | Validate provider config and provider responses at the boundary. |
-| Storage | `chrome.storage.local` + optional **WebCrypto encrypted vault** | No backend required. Keys encrypted at rest when a passphrase is set. |
-| Tests | **Vitest** (unit) + **Playwright** (E2E on a real page) | Adapters and the register engine need hard tests. |
+| Concern             | Choice                                                                     | Why                                                                                                               |
+| ------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Extension framework | **WXT** (Vite-based, MV3-first, cross-browser)                             | File-based entrypoints, HMR, typed manifest, Chrome + Firefox from one codebase. Replaces hand-rolled webpack.    |
+| Language            | **TypeScript**, strict                                                     | Non-negotiable for a security-sensitive, multi-provider codebase.                                                 |
+| UI                  | **React + Tailwind**, rendered inside a **closed Shadow DOM**              | Style isolation from host pages; team familiarity. Vanilla is viable but slower to ship.                          |
+| Model layer         | **Vercel AI SDK** (`ai`, `@ai-sdk/anthropic`, `@ai-sdk/openai-compatible`) | One interface over 75+ providers; matches the OpenCode mental model. Fetch-based, so it runs in a service worker. |
+| Validation          | **Zod**                                                                    | Validate provider config and provider responses at the boundary.                                                  |
+| Storage             | `chrome.storage.local` + optional **WebCrypto encrypted vault**            | No backend required. Keys encrypted at rest when a passphrase is set.                                             |
+| Tests               | **Vitest** (unit) + **Playwright** (E2E on a real page)                    | Adapters and the register engine need hard tests.                                                                 |
 
 > If WXT proves limiting, the fallback is Vite + `@crxjs/vite-plugin`. The architecture below is
 > framework-agnostic; only the entrypoint wiring changes.
@@ -55,12 +55,12 @@ experience is identical across every site.
 
 This is the single most important architectural constraint:
 
-- **CORS:** content scripts are subject to the *page's* CORS policy even when the extension has
+- **CORS:** content scripts are subject to the _page's_ CORS policy even when the extension has
   host permissions. A service worker with matching `host_permissions` is **not** — so provider
   calls must originate there.
 - **Key isolation:** a content script runs in a page-adjacent world that is a target for page
-  scripts. Keys must never be reachable from there. The content script only sends *intent* and
-  *text*; the worker owns credentials.
+  scripts. Keys must never be reachable from there. The content script only sends _intent_ and
+  _text_; the worker owns credentials.
 - **Surface trust:** the page is untrusted input. Keeping network + secrets out of it shrinks
   the attack surface to "the page can read text the user already typed."
 
@@ -78,31 +78,31 @@ This is the single most important architectural constraint:
 ```ts
 // A transform request: everything the worker needs, nothing it doesn't.
 interface TransformRequest {
-  intentText: string;            // selected text OR typed intent
-  mode: "polish" | "compose";
-  register: Register;            // resolved chips (who/tone/as/length/effort)
-  hints: RegisterHints;          // local inference output
-  context?: PageContext;         // opt-in only: thread/labels/recipient
+  intentText: string; // selected text OR typed intent
+  mode: 'polish' | 'compose';
+  register: Register; // resolved chips (who/tone/as/length/effort)
+  hints: RegisterHints; // local inference output
+  context?: PageContext; // opt-in only: thread/labels/recipient
   recipeId?: string;
-  voice: VoiceProfile;           // local style descriptor
+  voice: VoiceProfile; // local style descriptor
   stream: true;
 }
 
 interface Register {
-  who?: string;                  // audience
-  tone?: string[];               // ["direct","warm"]
-  format?: string;               // "slack-reply" | "jira-story" | "email" | ...
-  length?: "short" | "medium" | "long";
-  effort?: "quick" | "balanced" | "deep";
+  who?: string; // audience
+  tone?: string[]; // ["direct","warm"]
+  format?: string; // "slack-reply" | "jira-story" | "email" | ...
+  length?: 'short' | 'medium' | 'long';
+  effort?: 'quick' | 'balanced' | 'deep';
 }
 
 interface TransformResult {
   requestId: string;
-  text: string;                  // streaming chunks accumulate here
-  diff?: DiffOp[];               // for inline diff rendering
-  finishReason?: "stop" | "length" | "error";
+  text: string; // streaming chunks accumulate here
+  diff?: DiffOp[]; // for inline diff rendering
+  finishReason?: 'stop' | 'length' | 'error';
   usage?: { inputTokens: number; outputTokens: number };
-  provider: string;              // for transparency + error copy
+  provider: string; // for transparency + error copy
   model: string;
 }
 ```
@@ -115,8 +115,8 @@ dependency**, so it is unit-testable and reusable. Full spec in
 
 ```ts
 interface ProviderRegistry {
-  resolve(modelRef: string): ResolvedModel;      // "anthropic/claude-sonnet-4-5"
-  models(): ModelDescriptor[];                    // for the picker
+  resolve(modelRef: string): ResolvedModel; // "anthropic/claude-sonnet-4-5"
+  models(): ModelDescriptor[]; // for the picker
   validate(config: SayableConfig): ValidationResult;
 }
 
@@ -124,8 +124,8 @@ interface ResolvedModel {
   providerId: string;
   modelId: string;
   // "quick"|"balanced"|"deep" map to model tiers like OpenCode's small_model/model
-  tier: "fast" | "main" | "reasoning";
-  transport: "anthropic" | "openai-compatible";
+  tier: 'fast' | 'main' | 'reasoning';
+  transport: 'anthropic' | 'openai-compatible';
   baseURL?: string;
   headers?: Record<string, string>;
   apiKey?: string;
@@ -136,8 +136,8 @@ interface ResolvedModel {
   `options.{baseURL, apiKey, headers}`, `models`, `limit`). A user can paste their existing
   OpenCode config and it just works. See
   [PROVIDERS.md](./PROVIDERS.md#3-compatibility-with-opencode).
-- **Tiering:** the Effort control maps *Quick → fast model*, *Balanced → main model*,
-  *Deep → reasoning model*. This is where "how much reasoning should the AI put in" lives.
+- **Tiering:** the Effort control maps _Quick → fast model_, _Balanced → main model_,
+  _Deep → reasoning model_. This is where "how much reasoning should the AI put in" lives.
 - **Transports:** two adapters cover nearly everything — `anthropic` (Messages API, requires
   `anthropic-dangerous-direct-browser-access: true` for browser-origin calls) and
   `openai-compatible` (`/v1/chat/completions`). OpenAI's own API blocks browser origins by
@@ -151,16 +151,16 @@ interface ResolvedModel {
 
 ## 5. Storage
 
-| Key | Contents | Notes |
-| --- | --- | --- |
-| `sayable.config` | Provider config (OpenCode subset) | No secrets. |
-| `sayable.secrets` | API keys | Encrypted with AES-GCM + PBKDF2 if a passphrase is set; otherwise OS-protected extension storage. Never synced. |
-| `sayable.voice` | Learned Voice profile | Local only, never sent except inside a prompt. |
-| `sayable.recipes` | User recipes | Local; importable/exportable as JSON. |
-| `sayable.sites` | Per-site opt-ins (grip, context sharing) | User-controlled, revocable. |
-| `sayable.priors` | Register memory: chip corrections per surface + field role | Local, capped, wipeable, never synced. Applied priors are visible in the chip and resettable. |
-| `sayable.history` | Last N transforms (opt-in, default off) | Local, capped, wipeable. |
-| `chrome.storage.session` | Unlocked vault keys | Memory-only, cleared on browser restart, never visible to content scripts. |
+| Key                      | Contents                                                   | Notes                                                                                                           |
+| ------------------------ | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `sayable.config`         | Provider config (OpenCode subset)                          | No secrets.                                                                                                     |
+| `sayable.secrets`        | API keys                                                   | Encrypted with AES-GCM + PBKDF2 if a passphrase is set; otherwise OS-protected extension storage. Never synced. |
+| `sayable.voice`          | Learned Voice profile                                      | Local only, never sent except inside a prompt.                                                                  |
+| `sayable.recipes`        | User recipes                                               | Local; importable/exportable as JSON.                                                                           |
+| `sayable.sites`          | Per-site opt-ins (grip, context sharing)                   | User-controlled, revocable.                                                                                     |
+| `sayable.priors`         | Register memory: chip corrections per surface + field role | Local, capped, wipeable, never synced. Applied priors are visible in the chip and resettable.                   |
+| `sayable.history`        | Last N transforms (opt-in, default off)                    | Local, capped, wipeable.                                                                                        |
+| `chrome.storage.session` | Unlocked vault keys                                        | Memory-only, cleared on browser restart, never visible to content scripts.                                      |
 
 `chrome.storage.sync` is used **only** for non-sensitive prefs (theme, shortcut). Secrets and
 Voice never sync in plaintext. If a future accounts tier ships, cross-device sync must be
@@ -169,7 +169,7 @@ must keep working without an account — see [DECISIONS.md](./DECISIONS.md).
 
 **Vault lock states.** With a passphrase set, the vault starts **locked** at browser launch, and
 keys live in `chrome.storage.session` only while it is unlocked. A transform invoked while locked
-fails closed with an inline *Unlock to transform* affordance that opens the options page (or a
+fails closed with an inline _Unlock to transform_ affordance that opens the options page (or a
 small extension window). The passphrase is never typed into page context — a content-script
 overlay sees keystrokes that page scripts can read — so unlock always happens on an
 extension-owned surface. The Provider doctor is gated the same way.
@@ -178,21 +178,21 @@ extension-owned surface. The Provider doctor is gated the same way.
 
 ### Threat model
 
-| Threat | Mitigation |
-| --- | --- |
-| Page scripts stealing keys | Keys exist only in the service worker; content script never receives them; bar UI in a closed shadow root. |
-| Key exfiltration via network | Provider origins are runtime-granted optional hosts (D-004), never a static blanket; no analytics endpoint; CSP on extension pages. |
-| Host page tampering with our UI | Closed Shadow DOM + `all: initial`; UI is not reachable via page selectors. |
-| **Prompt injection from page/thread content** | Page text is delimited and labeled as untrusted *data*; the system prompt instructs the model to never follow instructions found inside quoted content; context is opt-in and previewed. |
-| Provider API key exposure in browser devtools | Requests originate in the worker, not the page; keys are not in page-visible storage. |
-| Page scripts reading secrets the user types | Keys and passphrases are entered only on extension-owned surfaces; content-script overlays never collect secrets. |
-| Malicious Recipe / config import | Zod-validate every imported object; recipes cannot declare arbitrary URLs or new hosts. |
+| Threat                                        | Mitigation                                                                                                                                                                               |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Page scripts stealing keys                    | Keys exist only in the service worker; content script never receives them; bar UI in a closed shadow root.                                                                               |
+| Key exfiltration via network                  | Provider origins are runtime-granted optional hosts (D-004), never a static blanket; no analytics endpoint; CSP on extension pages.                                                      |
+| Host page tampering with our UI               | Closed Shadow DOM + `all: initial`; UI is not reachable via page selectors.                                                                                                              |
+| **Prompt injection from page/thread content** | Page text is delimited and labeled as untrusted _data_; the system prompt instructs the model to never follow instructions found inside quoted content; context is opt-in and previewed. |
+| Provider API key exposure in browser devtools | Requests originate in the worker, not the page; keys are not in page-visible storage.                                                                                                    |
+| Page scripts reading secrets the user types   | Keys and passphrases are entered only on extension-owned surfaces; content-script overlays never collect secrets.                                                                        |
+| Malicious Recipe / config import              | Zod-validate every imported object; recipes cannot declare arbitrary URLs or new hosts.                                                                                                  |
 
 ### Privacy posture (a feature, not a page)
 
-- **No backend required.** Today the extension talks only to the provider *you* configure; there
+- **No backend required.** Today the extension talks only to the provider _you_ configure; there
   is no Sayable server in the loop. A future hosted tier (see [DECISIONS.md](./DECISIONS.md)) is
-  *another provider behind the same interface* — opt-in, never a requirement, and it never
+  _another provider behind the same interface_ — opt-in, never a requirement, and it never
   disables the BYOK or local paths.
 - **Local-first by default.** Inference, voice, recipes, and history live on device.
 - **Context is opt-in and previewed.** "Include this thread" shows exactly what will be sent.
@@ -218,18 +218,26 @@ extension-owned surface. The Provider doctor is gated the same way.
     "https://api.groq.com/*",
     "https://generativelanguage.googleapis.com/*",
     "http://localhost/*",
-    "http://127.0.0.1/*"
+    "http://127.0.0.1/*",
   ],
   "commands": {
     "invoke-register-bar": {
       "suggested_key": { "default": "Alt+J" },
-      "description": "Open the Register Bar on the current selection"
-    }
+      "description": "Open the Register Bar on the current selection",
+    },
   },
   "content_scripts": [
-    { "matches": ["https://mail.google.com/*", "https://app.slack.com/*", "https://*.atlassian.net/*"],
-      "js": ["content.js"], "all_frames": true, "run_at": "document_idle" }
-  ]
+    {
+      "matches": [
+        "https://mail.google.com/*",
+        "https://app.slack.com/*",
+        "https://*.atlassian.net/*",
+      ],
+      "js": ["content.js"],
+      "all_frames": true,
+      "run_at": "document_idle",
+    },
+  ],
 }
 ```
 
@@ -250,7 +258,7 @@ broadening the static list. Chrome match patterns wildcard the port by default, 
 - The grip is **off by default** and enabled per site, offered once after the first accepted
   transform.
 - **Transform vocabulary only.** Provider, model, key, voice, and theme controls never render in
-  the bar — they belong to the popup and options page. The bar may deep-link (*Open settings*),
+  the bar — they belong to the popup and options page. The bar may deep-link (_Open settings_),
   never embed a form; model transparency lives in result/error copy, not in a control.
 - **Never reflows the page** (position: fixed, high z-index, pointer-events scoped).
 - Dismisses on: `Esc`, outside click, scroll-away, field blur, or navigation.

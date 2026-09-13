@@ -40,7 +40,7 @@ non-goals in [docs/PRODUCT.md](../../../docs/PRODUCT.md#9-non-goals-v1). A recip
    };
    ```
 
-3. **Write register defaults that the chips can override.** The recipe supplies the *starting*
+3. **Write register defaults that the chips can override.** The recipe supplies the _starting_
    chips; the user's Who/Tone/As/Length always win. Never hardcode an audience.
 
 4. **Compile the prompt through the shared compiler** in `packages/core/src/prompt/`. Do not
@@ -57,7 +57,7 @@ non-goals in [docs/PRODUCT.md](../../../docs/PRODUCT.md#9-non-goals-v1). A recip
 
 6. **Add a golden snapshot.** For each representative (intent, register) input, snapshot the
    compiled prompt in `packages/core/src/prompt/__snapshots__/`. A prompt change with no snapshot
-   change is a bug; a prompt change *with* one is a behavior change that must be described in the
+   change is a bug; a prompt change _with_ one is a behavior change that must be described in the
    PR.
 
 7. **Test the output contract with a mock provider.** Assert the transform returns only the

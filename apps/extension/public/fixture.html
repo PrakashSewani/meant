@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Sayable fixture</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 2rem auto;
+        max-width: 40rem;
+        line-height: 1.5;
+      }
+      textarea,
+      input,
+      [contenteditable] {
+        width: 100%;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        padding: 0.5rem;
+        font: inherit;
+        margin-bottom: 1.5rem;
+      }
+      iframe {
+        width: 100%;
+        height: 12rem;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Sayable fixture</h1>
+    <p>Select rough text in any field, press Alt+J, and the bar should open.</p>
+
+    <label for="plain">Plain textarea</label>
+    <textarea id="plain" rows="3">ugh tell sarah the deploy slipped a day but we're on it</textarea>
+
+    <label for="placeholder">Placeholder-driven inference</label>
+    <textarea id="placeholder" rows="3" placeholder="Write a comment…"></textarea>
+
+    <label for="rich">Rich editor</label>
+    <div id="rich" contenteditable="true" role="textbox" aria-label="Message">
+      hey — the build is red again, can you take a look before standup
+    </div>
+
+    <label for="subject">Subject line</label>
+    <input id="subject" type="text" placeholder="Subject" value="quick question about the deploy" />
+
+    <iframe src="./fixture-frame.html" title="Framed editor"></iframe>
+  </body>
+</html>

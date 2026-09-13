@@ -16,7 +16,7 @@ Read in this order before implementing anything:
 2. [docs/EXPERIENCE.md](./docs/EXPERIENCE.md) — the interaction the code must preserve.
 3. [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) — components and constraints.
 4. [docs/PROVIDERS.md](./docs/PROVIDERS.md) — the BYOK contract.
-5. [docs/ROADMAP.md](./docs/ROADMAP.md) — what is in scope *right now*.
+5. [docs/ROADMAP.md](./docs/ROADMAP.md) — what is in scope _right now_.
 6. [docs/DECISIONS.md](./docs/DECISIONS.md) — the contracts that are settled; don't relitigate them.
 7. [docs/NAMING.md](./docs/NAMING.md) — the identity and the copy rules.
 
@@ -26,7 +26,7 @@ These are non-negotiable. Violating one is a P0 bug.
 
 1. **No API keys or vault passphrases outside the service worker.** Keys live in the vault, are
    decrypted in the worker only for the duration of a call, and are never sent to a content
-   script, page, or `chrome.storage.sync`. Secrets are never *collected* in page context either:
+   script, page, or `chrome.storage.sync`. Secrets are never _collected_ in page context either:
    a content-script overlay sees keystrokes that page scripts can read. Key entry and vault
    unlock happen on extension-owned surfaces only.
 2. **No provider calls from content scripts.** Content scripts send intents to the worker over a
@@ -91,7 +91,7 @@ Do not add a script without wiring it into CI-equivalent local runs.
 - **Validate at the boundary.** Provider responses, imported configs, and any page-derived data
   are untrusted — Zod-parse them.
 - **Pure logic in `core`.** Side effects (storage, network, DOM) live at the edges.
-- **No comments that restate the code.** Comment only non-obvious *why* (undo preservation,
+- **No comments that restate the code.** Comment only non-obvious _why_ (undo preservation,
   CORS, injection framing).
 - **Naming:** adapter ids are lowercase (`slack`, `gmail`, `generic`); recipes use kebab-case
   ids (`jira-user-story`); model refs are `provider/model`.
@@ -100,16 +100,16 @@ Do not add a script without wiring it into CI-equivalent local runs.
   shortcut controls. The bar may deep-link to the popup/options page; it never embeds a form.
 - **No premature abstraction.** Two similar site adapters is fine; three is when you extract.
 - **Errors are classified, not swallowed.** Use the `auth | cors | rate_limit | quota |
-  model_missing | network` taxonomy and map each to user-facing copy.
+model_missing | network` taxonomy and map each to user-facing copy.
 
 ## Common workflows
 
 Repo-local skills carry the step-by-step playbooks — load the matching one before starting:
 
-| Task | Skill |
-| --- | --- |
-| Add a provider or model preset | [`.commandcode/skills/byok-provider`](./.commandcode/skills/byok-provider/SKILL.md) |
-| Add support for a new site/app | [`.commandcode/skills/surface-adapter`](./.commandcode/skills/surface-adapter/SKILL.md) |
+| Task                                | Skill                                                                                     |
+| ----------------------------------- | ----------------------------------------------------------------------------------------- |
+| Add a provider or model preset      | [`.commandcode/skills/byok-provider`](./.commandcode/skills/byok-provider/SKILL.md)       |
+| Add support for a new site/app      | [`.commandcode/skills/surface-adapter`](./.commandcode/skills/surface-adapter/SKILL.md)   |
 | Author or change a transform recipe | [`.commandcode/skills/transform-recipe`](./.commandcode/skills/transform-recipe/SKILL.md) |
 
 ### The prompt compiler is the product — treat it like code
