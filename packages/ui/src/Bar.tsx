@@ -40,6 +40,10 @@ export interface BarProps {
   recipeId: string;
   anchor: BarAnchor;
   status: BarStatus;
+  /** Compose mode opens an intent box instead of transforming a selection. */
+  mode?: 'polish' | 'compose';
+  intent?: string;
+  onIntentChange?: (text: string) => void;
   result?: string;
   errorMessage?: string;
   onRegisterChange?: (register: Register) => void;
@@ -58,6 +62,9 @@ export function Bar({
   recipeId,
   anchor,
   status,
+  mode = 'polish',
+  intent,
+  onIntentChange,
   result,
   errorMessage,
   onRegisterChange,
@@ -73,6 +80,7 @@ export function Bar({
   const working = status === 'streaming';
   const primaryLabel =
     status === 'ready' ? 'Accept' : status === 'error' ? 'Try again' : 'Transform';
+  const nothingToTransform = mode === 'compose' && (intent ?? '').trim().length === 0;
 
   function change(patch: Partial<Register>) {
     onRegisterChange?.({ ...register, ...patch });
@@ -104,10 +112,14 @@ export function Bar({
     window.addEventListener('resize', measure);
 
     // Focus belongs here rather than in a passive effect: it has to happen before the first paint,
-    // while the element is definitely on screen and focusable.
+    // while the element is definitely on screen and focusable. Unless something inside already has
+    // it — the compose box autofocuses, and taking focus back would swallow what the user types.
     if (!tookFocus.current) {
       tookFocus.current = true;
-      element.focus();
+
+      const root = element.getRootNode();
+      const alreadyFocused = root instanceof ShadowRoot && root.activeElement !== null;
+      if (!alreadyFocused) element.focus();
     }
 
     return () => window.removeEventListener('resize', measure);
@@ -120,7 +132,7 @@ export function Bar({
     if (!(root instanceof ShadowRoot)) return;
 
     function onKeyDown(event: Event) {
-      const { key, shiftKey } = event as KeyboardEvent;
+      const { key, shiftKey, metaKey, ctrlKey } = event as KeyboardEvent;
       const dialogElement = dialog.current;
       if (!dialogElement) return;
 
@@ -141,6 +153,12 @@ export function Bar({
       if (key === 'Escape') {
         event.preventDefault();
         onDismiss?.();
+        return;
+      }
+
+      if (key === 'Enter' && (metaKey || ctrlKey) && !working) {
+        event.preventDefault();
+        onPrimary?.();
         return;
       }
 
@@ -190,7 +208,7 @@ export function Bar({
           <button
             type="button"
             onClick={onPrimary}
-            disabled={working}
+            disabled={working || nothingToTransform}
             className="flex items-center gap-1.5 rounded-md bg-neutral-900 px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-neutral-700 disabled:opacity-70"
           >
             {working ? <Spinner /> : null}
@@ -206,6 +224,17 @@ export function Bar({
           </button>
         </div>
       </div>
+
+      {mode === 'compose' ? (
+        <textarea
+          autoFocus
+          rows={3}
+          value={intent ?? ''}
+          placeholder="Write it messy — what do you want to say?"
+          onChange={(event) => onIntentChange?.(event.target.value)}
+          className="w-full resize-none border-b border-neutral-100 px-3 py-2.5 text-[13px] leading-relaxed placeholder:text-neutral-400 focus:outline-none"
+        />
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-1.5 px-3 py-2.5">
         <Chip label="Who" value={register.who} fallback="nobody">

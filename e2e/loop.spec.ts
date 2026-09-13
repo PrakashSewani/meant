@@ -147,6 +147,31 @@ test('editing a chip reaches the model, not just the pill', async () => {
   expect(events.at(-1)?.sent.tone).toEqual(['direct', 'warm']);
 });
 
+test('compose mode writes into an empty field', async () => {
+  const page = await context.newPage();
+  await page.goto(FIXTURE);
+
+  const field = page.locator('#placeholder');
+  await expect(field).toHaveValue('');
+  await field.click();
+
+  await invokeBar(context);
+
+  const bar = page.locator('meant-bar');
+  await expect(bar).toHaveAttribute('data-state', 'idle');
+
+  // The intent box is inside the bar, so it takes the typing once the bar holds focus.
+  await page.keyboard.type('tell sarah the deploy slipped a day');
+  await page.keyboard.press('ControlOrMeta+Enter');
+
+  await expect(bar).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
+
+  // In compose mode ⏎ is a newline in the intent box, so the primary action is ⌘⏎ throughout.
+  await page.keyboard.press('ControlOrMeta+Enter');
+
+  await expect(field).toHaveValue(/^\[mock\] tell sarah the deploy slipped a day/);
+});
+
 /**
  * Drives the same path the browser command does: the worker tells the tab to open the bar. The
  * command itself is a browser-level shortcut, which is not ours to test.

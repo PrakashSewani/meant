@@ -48,11 +48,10 @@ async function openBar(adapter: ReturnType<typeof adapterFor>): Promise<void> {
   }
 
   const selection = adapter.getSelection(element);
+  // With a selection we transform it. Without one the field itself is the subject: empty, this is
+  // writing from scratch; not empty, it is the text the user wants reworked.
+  const mode = selection ? 'polish' : 'compose';
   const intentText = (selection?.text ?? adapter.read(element)).trim();
-  if (!intentText) {
-    showNotice('Nothing to transform — write something first.');
-    return;
-  }
 
   const [mount, styles] = await Promise.all([ensureBar(), ensureStyles()]);
   if (!mount) return;
@@ -74,6 +73,7 @@ async function openBar(adapter: ReturnType<typeof adapterFor>): Promise<void> {
   const unmount = await mount({
     shadow,
     styles,
+    mode,
     anchor: anchorFor(element.element, selection),
     hints,
     register: resolveRegister({ hints }),

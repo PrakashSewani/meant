@@ -6,6 +6,7 @@ export type BarState = 'idle' | 'streaming' | 'ready' | 'error';
 export interface BarHostRequest {
   shadow: ShadowRoot;
   styles: string;
+  mode: 'polish' | 'compose';
   anchor: BarAnchor;
   hints: RegisterHints;
   register: Register;

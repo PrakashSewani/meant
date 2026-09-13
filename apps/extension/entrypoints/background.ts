@@ -18,6 +18,7 @@ import {
   resolveRegister,
   runDoctorReport,
   signalsFromError,
+  streamWithRetries,
   type DoctorReport,
   type Effort,
   type ResolvedModel,
@@ -120,9 +121,15 @@ async function handlePortMessage(
   const transport = model.providerId === 'mock' ? createMockTransport() : selectTransport(model);
 
   try {
-    for await (const chunk of transport.stream({ prompt, model, signal })) {
-      post(port, { type: 'chunk', requestId: request.requestId, text: chunk });
-    }
+    await streamWithRetries({
+      transport,
+      prompt,
+      model,
+      signal,
+      onChunk: (text) => {
+        post(port, { type: 'chunk', requestId: request.requestId, text });
+      },
+    });
     post(port, { type: 'done', requestId: request.requestId });
   } catch (error) {
     if (isAbort(error)) return;

@@ -9,6 +9,7 @@ export * from './providers/errors';
 export * from './providers/mock';
 export * from './providers/registry';
 export * from './providers/resolve';
+export * from './providers/retry';
 export * from './providers/types';
 export * from './recipes';
 export * from './recipes/types';

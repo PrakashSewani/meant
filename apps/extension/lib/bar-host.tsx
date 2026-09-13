@@ -44,11 +44,13 @@ function BarHost({
   hints,
   register: inferred,
   intentText,
+  mode,
   anchor,
   onState,
   onAccept,
   onDismiss,
 }: Omit<BarHostRequest, 'shadow' | 'styles'>) {
+  const [intent, setIntent] = useState(intentText);
   const [register, setRegister] = useState(inferred);
   const [effort, setEffort] = useState<Effort>('quick');
   const [recipeId, setRecipeId] = useState(DEFAULT_RECIPE_ID);
@@ -70,6 +72,8 @@ function BarHost({
   }
 
   function transform() {
+    if (intent.trim().length === 0) return;
+
     stop();
 
     const id = `r${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
@@ -99,8 +103,8 @@ function BarHost({
 
     const request: TransformRequest = {
       requestId: id,
-      intentText,
-      mode: 'polish',
+      intentText: intent,
+      mode,
       register,
       effort,
       recipeId,
@@ -143,6 +147,9 @@ function BarHost({
       recipeId={recipeId}
       anchor={anchor}
       status={status}
+      mode={mode}
+      intent={intent}
+      onIntentChange={setIntent}
       result={result || undefined}
       errorMessage={errorMessage}
       onRegisterChange={(next) => {
