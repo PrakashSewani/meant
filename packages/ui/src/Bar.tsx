@@ -11,6 +11,8 @@ import {
 const EFFORTS: readonly Effort[] = ['quick', 'balanced', 'deep'];
 const LENGTHS: readonly Length[] = ['short', 'medium', 'long'];
 
+export type BarStatus = 'idle' | 'streaming' | 'ready' | 'error';
+
 /** Where the bar should appear: the selection's box, in viewport coordinates. */
 export interface BarAnchor {
   left: number;
@@ -31,12 +33,14 @@ export interface BarProps {
   recipes: readonly RecipeChoice[];
   recipeId: string;
   anchor: BarAnchor;
+  status: BarStatus;
   result?: string;
   errorMessage?: string;
   onRegisterChange?: (register: Register) => void;
   onEffortChange?: (effort: Effort) => void;
   onRecipeChange?: (id: string) => void;
-  onAccept?: () => void;
+  /** Transform when there is nothing yet, accept once there is, retry after a failure. */
+  onPrimary?: () => void;
   onDismiss?: () => void;
 }
 
@@ -47,18 +51,22 @@ export function Bar({
   recipes,
   recipeId,
   anchor,
+  status,
   result,
   errorMessage,
   onRegisterChange,
   onEffortChange,
   onRecipeChange,
-  onAccept,
+  onPrimary,
   onDismiss,
 }: BarProps) {
   const [expanded, setExpanded] = useState(false);
   const [placement, setPlacement] = useState<{ left: number; top: number }>();
   const dialog = useRef<HTMLDivElement>(null);
   const tookFocus = useRef(false);
+
+  const primaryLabel =
+    status === 'ready' ? 'Accept' : status === 'error' ? 'Try again' : 'Transform';
 
   function change(patch: Partial<Register>) {
     onRegisterChange?.({ ...register, ...patch });
@@ -97,7 +105,7 @@ export function Bar({
     }
 
     return () => window.removeEventListener('resize', measure);
-  }, [anchor, expanded, result, errorMessage]);
+  }, [anchor, expanded, result, errorMessage, status]);
 
   useEffect(() => {
     // Listening on the shadow root rather than the document is what keeps the page's own keys out:
@@ -124,25 +132,27 @@ export function Bar({
         }
       }
 
-      // ⏎ is the primary action, but never at the expense of a control that needs it: an open
-      // select menu, or a chip input mid-edit.
-      const target = event.target as HTMLElement | null;
-      const typing = target?.matches('select, input, textarea') ?? false;
-
-      if (key === 'Enter' && result && !typing) {
-        event.preventDefault();
-        onAccept?.();
-      }
       if (key === 'Escape') {
         event.preventDefault();
         onDismiss?.();
+        return;
+      }
+
+      // ⏎ is the primary action — transform, then accept — but never at the expense of a control
+      // that needs it: an open select menu, or a chip input mid-edit.
+      const target = event.target as HTMLElement | null;
+      const typing = target?.matches('select, input, textarea') ?? false;
+
+      if (key === 'Enter' && !typing && status !== 'streaming') {
+        event.preventDefault();
+        onPrimary?.();
       }
     }
 
     root.addEventListener('keydown', onKeyDown);
 
     return () => root.removeEventListener('keydown', onKeyDown);
-  }, [result, onAccept, onDismiss]);
+  }, [status, onPrimary, onDismiss]);
 
   return (
     <div
@@ -151,17 +161,17 @@ export function Bar({
       aria-label="Meant"
       tabIndex={-1}
       style={{ left: placement?.left, top: placement?.top }}
-      className="meant-bar fixed z-[2147483647] w-max min-w-[19rem] max-w-[26rem] rounded-xl border border-neutral-200 bg-white font-sans text-[13px] text-neutral-900 shadow-xl ring-1 ring-black/5 outline-none"
+      className="meant-bar fixed z-[2147483647] w-max min-w-[21rem] max-w-[26rem] rounded-xl border border-neutral-200 bg-white font-sans text-[13px] text-neutral-900 shadow-xl ring-1 ring-black/5 outline-none"
     >
-      <div className="flex items-center gap-2 rounded-t-xl border-b border-neutral-200 bg-neutral-50 px-3 py-2">
-        <span aria-hidden className="text-neutral-400">
+      <div className="flex items-center gap-1.5 rounded-t-xl border-b border-neutral-200 bg-neutral-50 px-3 py-2">
+        <span aria-hidden className="mr-0.5 text-neutral-400">
           ✦
         </span>
         <select
           value={recipeId}
           aria-label="Transform"
           onChange={(event) => onRecipeChange?.(event.target.value)}
-          className="max-w-[10rem] cursor-pointer truncate bg-transparent font-medium text-neutral-900"
+          className="max-w-[11rem] cursor-pointer truncate bg-transparent font-medium text-neutral-900"
         >
           {recipes.map((recipe) => (
             <option key={recipe.id} value={recipe.id}>
@@ -169,37 +179,45 @@ export function Bar({
             </option>
           ))}
         </select>
+
         <button
           type="button"
           aria-expanded={expanded}
+          aria-label={expanded ? 'Fewer options' : 'More options'}
           onClick={() => setExpanded((value) => !value)}
-          className="ml-auto rounded-md border border-neutral-200 px-2 py-1 text-xs capitalize text-neutral-600"
+          className={`rounded-md px-1.5 py-0.5 text-xs text-neutral-500 transition-transform hover:text-neutral-800 ${
+            expanded ? 'rotate-180' : ''
+          }`}
         >
-          {effort}
+          ▾
         </button>
-        <button
-          type="button"
-          onClick={onAccept}
-          disabled={!result}
-          className="rounded-md bg-neutral-900 px-2 py-1 text-xs font-medium text-white disabled:opacity-40"
-        >
-          Accept
-        </button>
-        <button
-          type="button"
-          onClick={onDismiss}
-          className="rounded-md px-2 py-1 text-xs text-neutral-500"
-        >
-          Dismiss
-        </button>
+
+        <div className="ml-auto flex items-center gap-1">
+          <button
+            type="button"
+            onClick={onPrimary}
+            disabled={status === 'streaming'}
+            className="rounded-md bg-neutral-900 px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-neutral-700 disabled:opacity-40"
+          >
+            {primaryLabel}
+          </button>
+          <button
+            type="button"
+            aria-label="Dismiss"
+            onClick={onDismiss}
+            className="rounded-md px-1 text-neutral-400 transition-colors hover:text-neutral-800"
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
       {expanded ? (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2 px-3 py-2">
+        <div className="space-y-2 border-b border-neutral-100 px-3 py-2.5">
           <ChipInput
             label="Who"
             value={register.who ?? ''}
-            placeholder="Who?"
+            placeholder="nobody in particular"
             onCommit={(value) => change({ who: parseWho(value) })}
           />
           <ChipInput
@@ -212,61 +230,74 @@ export function Bar({
           <ChipInput
             label="As"
             value={register.format ?? ''}
-            placeholder="reply"
+            placeholder="a reply"
             list={FORMAT_SUGGESTIONS}
             onCommit={(value) => change({ format: parseWho(value) })}
           />
-          <div className="flex items-center gap-1">
-            <span className="text-xs text-neutral-500">Length</span>
-            {LENGTHS.map((value) => (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={value === register.length}
-                onClick={() => change({ length: value === register.length ? undefined : value })}
-                className={`rounded-md px-2 py-1 text-xs capitalize ${
-                  value === register.length ? 'bg-neutral-900 text-white' : 'text-neutral-600'
-                }`}
-              >
-                {value}
-              </button>
-            ))}
+
+          <div className="flex items-center gap-2">
+            <span className="w-12 shrink-0 text-xs text-neutral-500">Length</span>
+            <Segments
+              options={LENGTHS}
+              selected={register.length}
+              onSelect={(value) =>
+                change({ length: value === register.length ? undefined : value })
+              }
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="w-12 shrink-0 text-xs text-neutral-500">Effort</span>
+            <Segments
+              options={EFFORTS}
+              selected={effort}
+              onSelect={(value) => onEffortChange?.(value)}
+            />
           </div>
         </div>
       ) : null}
 
-      {expanded ? (
-        <div className="flex items-center gap-1 border-t border-neutral-100 px-3 py-2">
-          <span className="text-xs text-neutral-500">Effort</span>
-          {EFFORTS.map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => onEffortChange?.(value)}
-              aria-pressed={value === effort}
-              className={`rounded-md px-2 py-1 text-xs capitalize ${
-                value === effort ? 'bg-neutral-900 text-white' : 'text-neutral-600'
-              }`}
-            >
-              {value}
-            </button>
-          ))}
-        </div>
-      ) : null}
-
       {result ? (
-        <p className="max-h-56 overflow-auto border-t border-neutral-100 px-3 py-2 whitespace-pre-wrap">
+        <p className="max-h-52 overflow-auto px-3 py-2.5 leading-relaxed whitespace-pre-wrap">
           {result}
         </p>
       ) : null}
 
-      {errorMessage ? (
-        <p className="border-t border-neutral-100 px-3 py-2 text-red-700">{errorMessage}</p>
-      ) : null}
+      {errorMessage ? <p className="px-3 py-2.5 text-red-700">{errorMessage}</p> : null}
 
-      <p className="rounded-b-xl border-t border-neutral-100 bg-neutral-50 px-3 py-2 text-xs text-neutral-500">
+      <p className="rounded-b-xl border-t border-neutral-100 bg-neutral-50 px-3 py-1.5 text-[11px] text-neutral-500">
         {inferredLine}
       </p>
+    </div>
+  );
+}
+
+function Segments<T extends string>({
+  options,
+  selected,
+  onSelect,
+}: {
+  options: readonly T[];
+  selected?: T;
+  onSelect: (value: T) => void;
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      {options.map((value) => (
+        <button
+          key={value}
+          type="button"
+          aria-pressed={value === selected}
+          onClick={() => onSelect(value)}
+          className={`rounded-md px-2 py-0.5 text-xs capitalize transition-colors ${
+            value === selected
+              ? 'bg-neutral-900 text-white'
+              : 'text-neutral-500 hover:text-neutral-800'
+          }`}
+        >
+          {value}
+        </button>
+      ))}
     </div>
   );
 }
@@ -280,8 +311,8 @@ interface ChipInputProps {
 }
 
 /**
- * Text chips commit on blur or Enter rather than on every keystroke: a commit re-runs the
- * transform, and a transform per character is not a product.
+ * Text chips commit on blur or Enter rather than on every keystroke: a commit changes what the
+ * next transform will ask for, and a transform per character is not a product.
  */
 function ChipInput({ label, value, placeholder, list, onCommit }: ChipInputProps) {
   const [draft, setDraft] = useState(value);
@@ -307,7 +338,7 @@ function ChipInput({ label, value, placeholder, list, onCommit }: ChipInputProps
           if (event.key === 'Enter') commit();
           if (event.key === 'Escape') setDraft(value);
         }}
-        className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs"
+        className="w-full rounded-md border border-neutral-200 bg-white px-2 py-1 text-xs placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none"
       />
       {listId ? (
         <datalist id={listId}>

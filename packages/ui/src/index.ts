@@ -1,5 +1,5 @@
 export { Bar } from './Bar';
-export type { BarAnchor, BarProps, RecipeChoice } from './Bar';
+export type { BarAnchor, BarProps, BarStatus, RecipeChoice } from './Bar';
 export {
   FORMAT_SUGGESTIONS,
   TONE_SUGGESTIONS,

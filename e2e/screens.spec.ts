@@ -42,46 +42,33 @@ test('look at the bar', async () => {
     await worker.evaluate((id) => chrome.tabs.sendMessage(id, { type: 'invoke-bar' }), tabId);
 
     const bar = page.locator('meant-bar');
-    await expect(bar).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
+    await expect(bar).toHaveAttribute('data-state', 'idle');
 
     await page.screenshot({ path: join(SHOTS, '1-collapsed.png') });
 
-    const active = () =>
-      page.evaluate(() => document.activeElement?.tagName.toLowerCase() ?? 'none');
-    console.log('focus when ready:', await active());
-    console.log(
-      'bar focus claim:',
-      await bar.getAttribute('data-focus'),
-      await bar.getAttribute('data-focus-later'),
-      await bar.getAttribute('data-focusLater'),
-    );
-
-    // Keyboard reaches the bar: the recipe picker is the first control, the disclosure is next.
-    // Tab reaches the recipe picker, then the disclosure; Space opens it, Enter would accept.
+    // Tab reaches the recipe picker, then the disclosure; Space opens it.
     await page.keyboard.press('Tab');
     await page.keyboard.press('Tab');
     await page.keyboard.press('Space');
     await page.screenshot({ path: join(SHOTS, '2-expanded.png') });
 
-    // The host has no box of its own (the bar inside is fixed), so clip around the selection.
-    await page.screenshot({
-      path: join(SHOTS, '2c-closeup.png'),
-      clip: { x: 190, y: 250, width: 620, height: 330 },
-    });
-
-    // And the result, with the field it came from.
+    // Next stop is the primary action. Nothing is called until it is pressed.
     await page.keyboard.press('Tab');
     await page.keyboard.press('Enter');
+    await expect(bar).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
+    await page.screenshot({ path: join(SHOTS, '3-result.png') });
+
+    await page.keyboard.press('Enter');
     await page.waitForTimeout(150);
-    await page.screenshot({ path: join(SHOTS, '2b-accepted.png') });
+    await page.screenshot({ path: join(SHOTS, '4-accepted.png') });
 
     await page.goto(`chrome-extension://${extensionId}/options.html`);
     await page.waitForTimeout(400);
-    await page.screenshot({ path: join(SHOTS, '3-options.png'), fullPage: true });
+    await page.screenshot({ path: join(SHOTS, '5-options.png'), fullPage: true });
 
     await page.goto(`chrome-extension://${extensionId}/popup.html`);
     await page.waitForTimeout(400);
-    await page.screenshot({ path: join(SHOTS, '4-popup.png') });
+    await page.screenshot({ path: join(SHOTS, '6-popup.png') });
   } finally {
     await context.close();
   }

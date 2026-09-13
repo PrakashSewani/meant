@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Bar } from '@meant/ui';
+import { Bar, type BarStatus } from '@meant/ui';
 import {
   RECIPES,
   StreamEventSchema,
@@ -16,6 +16,7 @@ import { setBarMount, type BarHostRequest, type BarMount } from './bar-bridge';
 const PORT_NAME = 'meant-transform';
 const DEFAULT_RECIPE_ID = 'say-it-better';
 const RECIPE_CHOICES = RECIPES.map(({ id, label }) => ({ id, label }));
+
 export const mountBar: BarMount = ({ shadow, styles, ...request }) => {
   // The styles live inside the shadow root rather than on the page, so nothing leaks into the host.
   const style = document.createElement('style');
@@ -35,6 +36,10 @@ export default function registerBar(): void {
   setBarMount(mountBar);
 }
 
+/**
+ * Opening the bar spends nothing: it shows what inference decided and waits. Transform is the one
+ * action that calls a provider, and editing a chip goes back to asking rather than firing again.
+ */
 function BarHost({
   hints,
   register: inferred,
@@ -47,48 +52,67 @@ function BarHost({
   const [register, setRegister] = useState(inferred);
   const [effort, setEffort] = useState<Effort>('quick');
   const [recipeId, setRecipeId] = useState(DEFAULT_RECIPE_ID);
-  const [attempt, setAttempt] = useState(0);
+  const [status, setStatus] = useState<BarStatus>('idle');
   const [result, setResult] = useState('');
   const [errorMessage, setErrorMessage] = useState<string>();
 
-  useEffect(() => {
-    onState('streaming');
-    const requestId = `r${Date.now().toString(36)}${attempt}`;
-    const port = browser.runtime.connect({ name: PORT_NAME });
+  const port = useRef<ReturnType<typeof browser.runtime.connect> | null>(null);
 
-    port.onMessage.addListener((raw: unknown) => {
+  useEffect(() => {
+    onState(status);
+  }, [status, onState]);
+
+  useEffect(() => stop, []);
+
+  function stop() {
+    port.current?.disconnect();
+    port.current = null;
+  }
+
+  function transform() {
+    stop();
+
+    const id = `r${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+    const connection = browser.runtime.connect({ name: PORT_NAME });
+
+    port.current = connection;
+    setResult('');
+    setErrorMessage(undefined);
+    setStatus('streaming');
+
+    connection.onMessage.addListener((raw: unknown) => {
       const parsed = StreamEventSchema.safeParse(raw);
-      if (!parsed.success || parsed.data.requestId !== requestId) return;
+      if (!parsed.success || parsed.data.requestId !== id) return;
 
       const event = parsed.data;
       if (event.type === 'chunk') setResult((current) => current + event.text);
-      if (event.type === 'done') onState('ready');
+      if (event.type === 'done') setStatus('ready');
       if (event.type === 'error') {
         setErrorMessage(event.message);
-        onState('error');
+        setStatus('error');
       }
     });
 
+    connection.onDisconnect.addListener(() => {
+      if (port.current === connection) port.current = null;
+    });
+
     const request: TransformRequest = {
-      requestId,
+      requestId: id,
       intentText,
       mode: 'polish',
       register,
       effort,
       recipeId,
     };
-    port.postMessage({ type: 'transform', request });
+    connection.postMessage({ type: 'transform', request });
+  }
 
-    return () => {
-      port.postMessage({ type: 'cancel', requestId });
-      port.disconnect();
-    };
-  }, [attempt, effort, intentText, register, recipeId, onState]);
-
-  function rerun() {
+  function reset() {
+    stop();
     setResult('');
     setErrorMessage(undefined);
-    setAttempt((current) => current + 1);
+    setStatus('idle');
   }
 
   function record(accepted: boolean) {
@@ -115,30 +139,37 @@ function BarHost({
       inferredLine={inferredLine(hints, register)}
       register={register}
       effort={effort}
-      anchor={anchor}
       recipes={RECIPE_CHOICES}
       recipeId={recipeId}
+      anchor={anchor}
+      status={status}
       result={result || undefined}
       errorMessage={errorMessage}
       onRegisterChange={(next) => {
         setRegister(next);
-        rerun();
+        reset();
       }}
       onEffortChange={(value) => {
         setEffort(value);
-        rerun();
+        reset();
       }}
       onRecipeChange={(value) => {
         setRecipeId(value);
-        rerun();
+        reset();
       }}
-      onAccept={() => {
-        onAccept(result);
-        record(true);
+      onPrimary={() => {
+        if (status === 'ready') {
+          onAccept(result);
+          record(true);
+          return;
+        }
+
+        transform();
       }}
       onDismiss={() => {
         // Dismissing before anything was shown is not a rejection of anything.
         record(false);
+        stop();
         onDismiss();
       }}
     />

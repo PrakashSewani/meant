@@ -58,7 +58,7 @@ async function openBar(adapter: ReturnType<typeof adapterFor>): Promise<void> {
   if (!mount) return;
 
   const host = document.createElement(BAR_TAG);
-  host.dataset.state = 'streaming';
+  host.dataset.state = 'idle';
   document.documentElement.append(host);
 
   // Closed: the page cannot reach our markup, and page CSS cannot reach our styles.

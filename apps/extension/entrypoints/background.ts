@@ -125,6 +125,8 @@ async function handlePortMessage(
     }
     post(port, { type: 'done', requestId: request.requestId });
   } catch (error) {
+    if (isAbort(error)) return;
+
     const { kind } = classifyError(signalsFromError(error));
     post(port, {
       type: 'error',
@@ -151,7 +153,16 @@ async function runDoctorHere(): Promise<DoctorReport> {
 }
 
 function post(port: Browser.runtime.Port, event: StreamEvent): void {
-  port.postMessage(event);
+  try {
+    port.postMessage(event);
+  } catch {
+    // The frame closed mid-stream; there is nobody left to tell, and nothing to report about it.
+  }
+}
+
+/** Closing the bar aborts a call, and an abort is a cancel rather than a failure. */
+function isAbort(error: unknown): boolean {
+  return error instanceof Error && (error.name === 'AbortError' || /abort/i.test(error.message));
 }
 
 /** Every frame hears the invoke; only the focused one opens a bar (see the content script). */

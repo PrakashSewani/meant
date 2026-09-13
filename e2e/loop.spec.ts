@@ -32,9 +32,11 @@ test('polish, accept, and one native undo puts the original text back', async ()
   await invokeBar(context);
 
   const bar = page.locator('meant-bar');
-  await expect(bar).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
+  await expect(bar).toHaveAttribute('data-state', 'idle');
 
-  // Keyboard only: the bar takes focus when it opens, so ⏎ accepts the result.
+  // Keyboard only, and nothing is called until the user asks: ⏎ transforms, then ⏎ accepts.
+  await page.keyboard.press('Enter');
+  await expect(bar).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
   await page.keyboard.press('Enter');
 
   // Assert the answer, not just "something changed": a stray keystroke would satisfy that.
@@ -98,6 +100,8 @@ test('a configured endpoint is called for real, through the same pipeline', asyn
     await invokeBar(context);
 
     const bar = page.locator('meant-bar');
+    await expect(bar).toHaveAttribute('data-state', 'idle');
+    await page.keyboard.press('Enter');
     await expect(bar).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
     await page.keyboard.press('Enter');
 
