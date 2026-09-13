@@ -1,12 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Meant">
   <rect x="4" y="4" width="120" height="120" rx="30" fill="#18181b" />
-  <!-- Two voices: the plain quote, and in the brand's amber the register it becomes. -->
-  <path
-    d="M40 80 C 40 62, 48 50, 62 44 L 66 54 C 57 58, 53 65, 52 72 L 62 72 L 62 92 L 40 80 Z"
-    fill="#fafafa"
-  />
-  <path
-    d="M70 80 C 70 62, 78 50, 92 44 L 96 54 C 87 58, 83 65, 82 72 L 92 72 L 92 92 L 70 80 Z"
-    fill="#f59e0b"
-  />
+  <!-- Two voices: the plain quote, and in the brand's amber the register it becomes.
+       Translated by -4,-4 so the mark's own centre lands on the tile's: its bounds are
+       40–96 by 44–92, which put it low and right before this. -->
+  <g transform="translate(-4 -4)">
+    <path
+      d="M40 80 C 40 62, 48 50, 62 44 L 66 54 C 57 58, 53 65, 52 72 L 62 72 L 62 92 L 40 80 Z"
+      fill="#fafafa"
+    />
+    <path
+      d="M70 80 C 70 62, 78 50, 92 44 L 96 54 C 87 58, 83 65, 82 72 L 92 72 L 92 92 L 70 80 Z"
+      fill="#f59e0b"
+    />
+  </g>
 </svg>
