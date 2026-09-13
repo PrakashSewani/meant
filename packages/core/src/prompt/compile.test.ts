@@ -103,6 +103,26 @@ describe('compilePrompt', () => {
     expect(withContext.user).toContain('<intent>\nship it\n</intent>');
   });
 
+  it('turns a refinement into an instruction about the previous attempt', () => {
+    const { system } = compilePrompt({
+      intent: 'the deploy slipped a day',
+      register: {},
+      refinements: ['shorter', 'softer'],
+    });
+
+    expect(system).toContain('## Refinements');
+    expect(system).toContain('previous attempt at this rewrite');
+    expect(system).toContain('the same meaning in fewer words');
+    expect(system).toContain('lose any edge or impatience');
+    expect(system).not.toContain('## Refinements\n-\n');
+  });
+
+  it('says nothing about refinements when none were asked for', () => {
+    const { system } = compilePrompt({ intent: 'hello', register: {} });
+
+    expect(system).not.toContain('## Refinements');
+  });
+
   it('produces goldens for the shipped recipes', () => {
     const registers = [
       { register: { who: 'Sarah', tone: ['direct'], format: 'reply', length: 'short' as const } },

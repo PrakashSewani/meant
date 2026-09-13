@@ -22,6 +22,7 @@ export const TransformRequestSchema = z.object({
   register: RegisterSchema,
   effort: EffortSchema,
   recipeId: z.string().min(1).optional(),
+  refinements: z.array(z.string().min(1)).optional(),
 });
 
 export const PortRequestSchema = z.discriminatedUnion('type', [

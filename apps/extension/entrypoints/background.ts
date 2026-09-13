@@ -114,7 +114,12 @@ async function handlePortMessage(
   const { request } = parsed.data;
   const recipe = request.recipeId ? getRecipe(request.recipeId) : undefined;
   const register = resolveRegister({ defaults: recipe?.register, overrides: request.register });
-  const prompt = compilePrompt({ intent: request.intentText, register, recipe });
+  const prompt = compilePrompt({
+    intent: request.intentText,
+    register,
+    recipe,
+    refinements: request.refinements,
+  });
   const model = (await configuredModel(request.effort)) ?? MOCK_MODEL;
 
   // With nothing configured yet, the mock keeps the loop demo-able; the popup says so plainly.

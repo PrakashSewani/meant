@@ -1,5 +1,6 @@
 export * from './bar';
 export * from './brand';
+export * from './diff';
 export * from './events';
 export * from './inference';
 export * from './prompt/compile';
@@ -13,6 +14,7 @@ export * from './providers/retry';
 export * from './providers/types';
 export * from './recipes';
 export * from './recipes/types';
+export * from './refinements';
 export * from './register/resolve';
 export * from './register/schemas';
 export * from './register/types';

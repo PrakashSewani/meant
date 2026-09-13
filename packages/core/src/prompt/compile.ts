@@ -1,4 +1,5 @@
 import type { PageContext, Register } from '../register/types';
+import { refinementsByIds } from '../refinements';
 import type { Recipe } from '../recipes/types';
 import type { VoiceProfile } from '../voice/types';
 import {
@@ -15,6 +16,8 @@ export interface CompileInput {
   recipe?: Recipe;
   voice?: VoiceProfile;
   context?: PageContext;
+  /** One-shot edits the user asked for on top of the result, as ids from REFINEMENTS. */
+  refinements?: readonly string[];
 }
 
 export interface CompiledPrompt {
@@ -28,6 +31,7 @@ export function compilePrompt({
   recipe,
   voice,
   context,
+  refinements,
 }: CompileInput): CompiledPrompt {
   const system = [
     'You rewrite text so it fits the situation it is being sent into.',
@@ -36,6 +40,7 @@ export function compilePrompt({
     '## Register',
     ...renderRegister(register).map((line) => `- ${line}`),
     ...renderRecipe(recipe),
+    ...renderRefinements(refinements),
     ...renderVoice(voice),
     '',
     '## Rules',
@@ -87,6 +92,19 @@ function renderRecipe(recipe?: Recipe): string[] {
   const lines = ['', '## Recipe', `- ${recipe.label}`];
   for (const instruction of recipe.instructions ?? []) lines.push(`- ${instruction}`);
   return lines;
+}
+
+function renderRefinements(ids?: readonly string[]): string[] {
+  const requested = refinementsByIds(ids ?? []);
+  if (requested.length === 0) return [];
+
+  return [
+    '',
+    '## Refinements',
+    // The intent below is the text to change, not a fresh request.
+    '- The text is the previous attempt at this rewrite. Change it rather than starting over.',
+    ...requested.map((refinement) => `- ${refinement.instruction}`),
+  ];
 }
 
 function renderVoice(voice?: VoiceProfile): string[] {

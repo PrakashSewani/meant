@@ -1,5 +1,13 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import type { Effort, Length, Register } from '@meant/core';
+import {
+  DIFF_WORTH_SHOWING,
+  REFINEMENTS,
+  diffWords,
+  similarity,
+  type Effort,
+  type Length,
+  type Register,
+} from '@meant/core';
 import {
   FORMAT_SUGGESTIONS,
   TONE_SUGGESTIONS,
@@ -45,6 +53,11 @@ export interface BarProps {
   intent?: string;
   onIntentChange?: (text: string) => void;
   result?: string;
+  /** What went in, so the result can be shown as the change it is. */
+  original?: string;
+  refinements?: readonly string[];
+  onRefine?: (id: string) => void;
+  onRetry?: () => void;
   errorMessage?: string;
   onRegisterChange?: (register: Register) => void;
   onEffortChange?: (effort: Effort) => void;
@@ -66,6 +79,10 @@ export function Bar({
   intent,
   onIntentChange,
   result,
+  original,
+  refinements,
+  onRefine,
+  onRetry,
   errorMessage,
   onRegisterChange,
   onEffortChange,
@@ -74,6 +91,7 @@ export function Bar({
   onDismiss,
 }: BarProps) {
   const [placement, setPlacement] = useState<{ left: number; top: number }>();
+  const [plainResult, setPlainResult] = useState(false);
   const dialog = useRef<HTMLDivElement>(null);
   const tookFocus = useRef(false);
 
@@ -81,6 +99,10 @@ export function Bar({
   const primaryLabel =
     status === 'ready' ? 'Accept' : status === 'error' ? 'Try again' : 'Transform';
   const nothingToTransform = mode === 'compose' && (intent ?? '').trim().length === 0;
+  // A light edit is easier to judge as a diff; a full rewrite is easier to read as text.
+  const changesAreWorthShowing =
+    Boolean(result && original) && similarity(original ?? '', result ?? '') >= DIFF_WORTH_SHOWING;
+  const showingChanges = Boolean(result) && changesAreWorthShowing && !plainResult;
 
   function change(patch: Partial<Register>) {
     onRegisterChange?.({ ...register, ...patch });
@@ -294,12 +316,74 @@ export function Bar({
       ) : null}
 
       {result ? (
-        <p className="max-h-52 overflow-auto border-t border-neutral-100 px-3 py-2.5 leading-relaxed whitespace-pre-wrap">
-          {result}
-          {working ? (
-            <span className="ml-0.5 inline-block h-3.5 w-1.5 translate-y-0.5 animate-pulse rounded-sm bg-neutral-400" />
-          ) : null}
-        </p>
+        <div className="max-h-52 overflow-auto border-t border-neutral-100 px-3 py-2.5 leading-relaxed">
+          {showingChanges ? (
+            <p className="whitespace-pre-wrap">
+              {diffWords(original ?? '', result).map((part, index) => (
+                <span
+                  key={index}
+                  className={
+                    part.kind === 'removed'
+                      ? 'text-neutral-400 line-through'
+                      : part.kind === 'added'
+                        ? 'underline decoration-neutral-400 decoration-1 underline-offset-2'
+                        : undefined
+                  }
+                >
+                  {part.text}
+                </span>
+              ))}
+              {working ? <Caret /> : null}
+            </p>
+          ) : (
+            <p className="whitespace-pre-wrap">
+              {result}
+              {working ? <Caret /> : null}
+            </p>
+          )}
+        </div>
+      ) : null}
+
+      {result && original ? (
+        <div className="border-t border-neutral-100 px-3 py-1">
+          <button
+            type="button"
+            aria-pressed={showingChanges}
+            onClick={() => setPlainResult(showingChanges)}
+            className="rounded-md px-1.5 py-0.5 text-[11px] text-neutral-500 transition-colors hover:text-neutral-900"
+          >
+            {showingChanges ? 'Show result' : 'Show changes'}
+          </button>
+        </div>
+      ) : null}
+
+      {status === 'ready' || status === 'error' ? (
+        <div className="flex flex-wrap items-center gap-1 border-t border-neutral-100 bg-neutral-50 px-3 py-1.5">
+          {REFINEMENTS.map((refinement) => (
+            <button
+              key={refinement.id}
+              type="button"
+              aria-pressed={refinements?.includes(refinement.id) ?? false}
+              onClick={() => onRefine?.(refinement.id)}
+              className={`rounded-full px-2 py-0.5 text-[11px] transition-colors ${
+                refinements?.includes(refinement.id)
+                  ? 'bg-neutral-900 text-white'
+                  : 'text-neutral-600 hover:bg-neutral-200'
+              }`}
+            >
+              {refinement.label}
+            </button>
+          ))}
+          <button
+            type="button"
+            aria-label="Try again"
+            title="Try again"
+            onClick={onRetry}
+            className="ml-auto rounded-md px-1.5 py-0.5 text-[11px] text-neutral-500 transition-colors hover:text-neutral-900"
+          >
+            ↻
+          </button>
+        </div>
       ) : null}
 
       {errorMessage ? (
@@ -310,6 +394,12 @@ export function Bar({
         {inferredLine}
       </p>
     </div>
+  );
+}
+
+function Caret() {
+  return (
+    <span className="ml-0.5 inline-block h-3.5 w-1.5 translate-y-0.5 animate-pulse rounded-sm bg-neutral-400" />
   );
 }
 

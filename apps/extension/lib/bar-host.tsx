@@ -51,6 +51,8 @@ function BarHost({
   onDismiss,
 }: Omit<BarHostRequest, 'shadow' | 'styles'>) {
   const [intent, setIntent] = useState(intentText);
+  const [original, setOriginal] = useState(intentText);
+  const [refinements, setRefinements] = useState<readonly string[]>([]);
   const [register, setRegister] = useState(inferred);
   const [effort, setEffort] = useState<Effort>('quick');
   const [recipeId, setRecipeId] = useState(DEFAULT_RECIPE_ID);
@@ -71,8 +73,16 @@ function BarHost({
     port.current = null;
   }
 
-  function transform() {
-    if (intent.trim().length === 0) return;
+  function transform(overrides: { intent?: string; refinements?: readonly string[] } = {}) {
+    // Taken as arguments rather than read from state: a refinement changes the intent and re-runs
+    // in the same gesture, and state would still be the previous value here.
+    const nextIntent = overrides.intent ?? intent;
+    const nextRefinements = overrides.refinements ?? refinements;
+    if (nextIntent.trim().length === 0) return;
+
+    setIntent(nextIntent);
+    setRefinements(nextRefinements);
+    setOriginal(nextIntent);
 
     stop();
 
@@ -103,11 +113,12 @@ function BarHost({
 
     const request: TransformRequest = {
       requestId: id,
-      intentText: intent,
+      intentText: nextIntent,
       mode,
       register,
       effort,
       recipeId,
+      ...(nextRefinements.length > 0 ? { refinements: [...nextRefinements] } : {}),
     };
     connection.postMessage({ type: 'transform', request });
   }
@@ -151,6 +162,13 @@ function BarHost({
       intent={intent}
       onIntentChange={setIntent}
       result={result || undefined}
+      original={original}
+      refinements={refinements}
+      onRefine={(id) => {
+        // A refinement re-runs on the result itself, so the chips compound through the text.
+        transform({ intent: result, refinements: [id] });
+      }}
+      onRetry={() => transform()}
       errorMessage={errorMessage}
       onRegisterChange={(next) => {
         setRegister(next);
