@@ -175,6 +175,32 @@ test('compose mode writes into an empty field', async () => {
   await expect(field).toHaveValue(/^\[mock\] tell sarah the deploy slipped a day/);
 });
 
+test('writes into a rich editor that has markup in the way', async () => {
+  const page = await context.newPage();
+  await page.goto('http://localhost:3123/fixture-rich.html');
+
+  const editor = page.locator('#thread');
+  const before = await editor.innerText();
+
+  // Select the rough line inside its paragraph: the write has to land in the middle of markup.
+  await editor.locator('p').first().selectText();
+
+  await invokeBar(context);
+
+  const bar = page.locator('meant-bar');
+  await expect(bar).toHaveAttribute('data-state', 'idle');
+  await page.keyboard.press('Enter');
+  await expect(bar).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
+  await page.keyboard.press('Enter');
+
+  // The rest of the thread survives, which is the invariant about transforming only the selection.
+  await expect(editor).toContainText('Two tests fail');
+  await expect(editor.innerText()).not.toBe(before);
+
+  await page.evaluate(() => document.execCommand('undo'));
+  expect(await editor.innerText()).toBe(before);
+});
+
 /**
  * Drives the same path the browser command does: the worker tells the tab to open the bar. The
  * command itself is a browser-level shortcut, which is not ours to test.

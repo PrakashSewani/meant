@@ -21,7 +21,8 @@ refuses everything else. If a feature isn't listed here, it isn't happening yet.
 The whole product, at minimum, on the most generic surface.
 
 - **Surface:** universal adapter only — `<textarea>`, `<input type=text>`, `[contenteditable]`.
-- **Mode:** Polish only (select rough text → transform in place).
+- **Mode:** Polish (select rough text → transform in place) and Compose (invoke in an empty
+  field → write the intent in the bar → the answer lands in the field).
 - **UI:** the Register Bar, collapsed + expanded. Four chips (Who/Tone/As/Length) + Effort.
 - **Recipes:** three universal ones — _Say it better_, _Make it shorter_, _Fix the tone_.
 - **Providers:** curated presets (Anthropic plus a few `openai-compatible` vendors) and Ollama /
@@ -34,8 +35,14 @@ The whole product, at minimum, on the most generic surface.
 - **Privacy:** no transform history, no context capture, keys in local storage only, and a local
   event log that records register metadata — never text — so accept rate is a number rather than a
   feeling.
-- **Deliberately absent:** voice memory, register memory, compose mode, site adapters, recipe
-  library, sync.
+- **Invocation:** the browser shortcut, the context menu, and the grip — off by default, offered
+  once after the first accepted transform, per site (invariant 4).
+- **Result:** inline diff when the change is a light edit, refinement chips (Shorter · Softer ·
+  Plainer · More formal · Add a next step) and ↻ for a one-shot re-run.
+- **Learns locally:** register memory from the chips you keep correcting, shown in the chip, one
+  reset at a time (D-005).
+- **Retries:** transient provider failures retry in the worker, never after text has been shown.
+- **Deliberately absent:** voice memory, site adapters, the recipe library, sync.
 
 **Exit criteria:** I use it daily for a week; accept-rate on my own transforms ≥ 60%; native undo
 verified on textarea + a contenteditable editor; inference goldens green on the fixture corpus.

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Meant fixture — rich editor</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 2rem auto;
+        max-width: 38rem;
+        line-height: 1.6;
+      }
+      [contenteditable] {
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        padding: 0.75rem;
+        min-height: 6rem;
+      }
+      [contenteditable] p {
+        margin: 0 0 0.75rem;
+      }
+      [contenteditable] p:last-child {
+        margin-bottom: 0;
+      }
+      .quoted {
+        border-left: 3px solid #ddd;
+        padding-left: 0.75rem;
+        color: #444;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Rich editor</h1>
+    <p>
+      Nested markup, a quoted reply, and a link — the shapes a real editor puts in the way of a
+      write.
+    </p>
+
+    <div id="thread" contenteditable="true" role="textbox" aria-label="Message">
+      <p>Morning — quick one about the release.</p>
+      <p>The build is red again on main. <strong>Two tests fail</strong> consistently.</p>
+      <p class="quoted">
+        &gt; can you take a look before standup
+        <a href="https://example.com/build">build log</a>
+      </p>
+      <p>I think it is the flaky one from last week but I have not confirmed that.</p>
+    </div>
+  </body>
+</html>
