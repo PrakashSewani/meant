@@ -7,11 +7,12 @@ import {
   createMockTransport,
   errorCopy,
   getRecipe,
+  planDoctorChecks,
   resolveModel,
   resolveRegister,
-  runDoctor,
+  runDoctorReport,
   signalsFromError,
-  type DoctorResult,
+  type DoctorReport,
   type Effort,
   type ResolvedModel,
   type StreamEvent,
@@ -92,13 +93,19 @@ async function handlePortMessage(
   }
 }
 
-async function runDoctorHere(): Promise<DoctorResult> {
-  const model = await configuredModel('quick');
-  if (!model) {
-    return { ok: false, kind: 'auth', message: 'No provider is configured yet.' };
-  }
+async function runDoctorHere(): Promise<DoctorReport> {
+  const stored = await browser.storage.local.get([CONFIG_KEY, SECRETS_KEY]);
+  const parsed = validateConfig(stored[CONFIG_KEY]);
+  if (!parsed.ok) return { ok: false, message: 'No provider is configured yet.', checks: [] };
 
-  return runDoctor(selectTransport(model), model);
+  const checks = planDoctorChecks({
+    refs: tierRefsOf(parsed.config),
+    providers: parsed.config.provider,
+    secrets: readSecrets(stored[SECRETS_KEY]),
+    disabledProviders: parsed.config.disabled_providers,
+  });
+
+  return runDoctorReport(checks, selectTransport);
 }
 
 function post(port: Browser.runtime.Port, event: StreamEvent): void {

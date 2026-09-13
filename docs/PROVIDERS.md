@@ -188,8 +188,11 @@ Be honest about what "secure" means in a browser extension.
 - On failure, classify and explain: `auth` (bad key), `cors` (origin/permission block),
   `rate_limit`, `quota`, `model_missing`, `network`. Each maps to specific, non-scolding copy
   and a "Fix in Settings" affordance.
-- A built-in **Provider doctor** sends a 1-token ping through the configured transport and
-  reports exactly what failed — the fastest path out of "why doesn't my key work."
+- A built-in **Provider doctor** probes each model the configuration actually reaches — one
+  1-token ping per model, labeled with the Effort tiers that use it — and reports the classified
+  failure rather than the raw provider error. It runs when you save a provider, and on demand from
+  the options page. A key is rarely what is wrong; a mistyped model id is, and that only shows up
+  when the model is called. The fastest path out of "why doesn't my key work."
 
 ## 10. Guardrails & prompt compilation
 

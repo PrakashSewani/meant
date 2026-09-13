@@ -1,7 +1,10 @@
 import { z } from 'zod';
 import { ErrorKindSchema } from '../providers/errors';
+import type { Tier } from './types';
 
 export const LengthSchema = z.enum(['short', 'medium', 'long']);
+
+export const TierSchema = z.enum(['fast', 'main', 'reasoning']) satisfies z.ZodType<Tier>;
 
 export const EffortSchema = z.enum(['quick', 'balanced', 'deep']);
 

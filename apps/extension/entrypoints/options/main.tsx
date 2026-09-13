@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { DoctorResultSchema, type DoctorResult } from '@sayable/core';
+import { DoctorReportSchema, type DoctorReport } from '@sayable/core';
 import {
   PRESETS,
   defaultConfigFor,
@@ -17,20 +17,22 @@ function Options() {
   const [apiKey, setApiKey] = useState('');
   const [status, setStatus] = useState<string>();
   const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<DoctorResult>();
+  const [report, setReport] = useState<DoctorReport>();
 
   const preset = presetFor(selected);
 
   async function testConnection() {
     setTesting(true);
-    setTestResult(undefined);
+    setReport(undefined);
 
     try {
       const raw = await browser.runtime.sendMessage({ type: 'doctor' });
-      const parsed = DoctorResultSchema.safeParse(raw);
+      const parsed = DoctorReportSchema.safeParse(raw);
 
-      setTestResult(
-        parsed.success ? parsed.data : { ok: false, message: 'The worker did not answer.' },
+      setReport(
+        parsed.success
+          ? parsed.data
+          : { ok: false, message: 'The worker did not answer.', checks: [] },
       );
     } finally {
       setTesting(false);
@@ -54,6 +56,10 @@ function Options() {
         ? `${preset.name} is enabled.`
         : `${preset.name} is saved, but the permission was declined — calls will fail until you allow it.`,
     );
+
+    // Saving is the moment the user finds out whether it works, so ask now instead of
+    // making them find the button.
+    await testConnection();
   }
 
   return (
@@ -119,10 +125,25 @@ function Options() {
 
       {status ? <p className="mt-3 text-xs text-neutral-600">{status}</p> : null}
 
-      {testResult ? (
-        <p className={`mt-2 text-xs ${testResult.ok ? 'text-neutral-600' : 'text-red-700'}`}>
-          {testResult.message}
-        </p>
+      {report ? (
+        <section className="mt-3">
+          <p className={`text-xs ${report.ok ? 'text-neutral-600' : 'text-neutral-800'}`}>
+            {report.message}
+          </p>
+          <ul className="mt-2 space-y-1">
+            {report.checks.map((check) => (
+              <li key={check.label} className="flex gap-2 text-xs">
+                <span aria-hidden className={check.ok ? 'text-neutral-500' : 'text-red-700'}>
+                  {check.ok ? '✓' : '✗'}
+                </span>
+                <span className="text-neutral-500">{check.label}</span>
+                <span className={check.ok ? 'text-neutral-500' : 'text-red-700'}>
+                  {check.ok ? '' : check.message}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
       ) : null}
     </main>
   );

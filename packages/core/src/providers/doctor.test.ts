@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { runDoctor } from './doctor';
+import { planDoctorChecks, runDoctor, runDoctorReport } from './doctor';
 import { createMockTransport } from './mock';
 import type { ResolvedModel, TransformTransport } from './types';
 
@@ -74,5 +74,100 @@ describe('runDoctor', () => {
 
     expect(result.kind).toBe('network');
     expect(result.message).toContain('connection');
+  });
+});
+
+describe('planDoctorChecks', () => {
+  const PROVIDERS = {
+    anthropic: { options: { baseURL: 'https://api.anthropic.com/v1' } },
+    groq: { options: { baseURL: 'https://api.groq.com/openai/v1' } },
+  };
+
+  it('probes each tier the config claims', () => {
+    const checks = planDoctorChecks({
+      refs: {
+        fast: 'groq/llama-3.3-70b-versatile',
+        main: 'anthropic/claude-sonnet-5',
+        reasoning: 'anthropic/claude-opus-5',
+      },
+      providers: PROVIDERS,
+      secrets: {},
+    });
+
+    expect(checks.map((check) => check.efforts)).toEqual([['quick'], ['balanced'], ['deep']]);
+    expect(checks.map((check) => check.model.modelId)).toEqual([
+      'llama-3.3-70b-versatile',
+      'claude-sonnet-5',
+      'claude-opus-5',
+    ]);
+  });
+
+  it('reports a model that serves several tiers once, naming all of them', async () => {
+    const checks = planDoctorChecks({
+      refs: { main: 'anthropic/claude-sonnet-5' },
+      providers: PROVIDERS,
+      secrets: {},
+    });
+
+    expect(checks).toHaveLength(1);
+    expect(checks[0]?.efforts).toEqual(['quick', 'balanced', 'deep']);
+
+    const report = await runDoctorReport(checks, () => createMockTransport(() => 'ok'));
+    expect(report.checks[0]?.label).toBe('All tiers · anthropic · claude-sonnet-5');
+  });
+
+  it('has nothing to probe when no tier is configured', () => {
+    expect(planDoctorChecks({ refs: {}, providers: {}, secrets: {} })).toEqual([]);
+  });
+});
+
+describe('runDoctorReport', () => {
+  it('says so plainly when there is nothing configured', async () => {
+    const report = await runDoctorReport([], () => createMockTransport());
+
+    expect(report.ok).toBe(false);
+    expect(report.checks).toEqual([]);
+    expect(report.message).toContain('No provider');
+  });
+
+  it('reports every tier that answered', async () => {
+    const checks = planDoctorChecks({
+      refs: { fast: 'groq/fast-model', main: 'anthropic/claude-sonnet-5' },
+      providers: {
+        groq: { options: { baseURL: 'https://api.groq.com/openai/v1' } },
+        anthropic: { options: { baseURL: 'https://api.anthropic.com/v1' } },
+      },
+      secrets: {},
+    });
+
+    const report = await runDoctorReport(checks, () => createMockTransport(() => 'ok'));
+
+    expect(report.ok).toBe(true);
+    expect(report.checks).toHaveLength(2);
+    expect(report.checks[0]?.label).toContain('Quick');
+    expect(report.checks[0]?.efforts).toEqual(['quick']);
+    expect(report.message).toContain('2 models');
+  });
+
+  it('names the tier that failed instead of failing the whole report silently', async () => {
+    const checks = planDoctorChecks({
+      refs: { fast: 'groq/fast-model', main: 'anthropic/claude-sonnet-5' },
+      providers: {
+        groq: { options: { baseURL: 'https://api.groq.com/openai/v1' } },
+        anthropic: { options: { baseURL: 'https://api.anthropic.com/v1' } },
+      },
+      secrets: {},
+    });
+
+    const report = await runDoctorReport(checks, (model) =>
+      model.providerId === 'groq'
+        ? failingTransport(Object.assign(new Error('Unauthorized'), { statusCode: 401 }))
+        : createMockTransport(() => 'ok'),
+    );
+
+    expect(report.ok).toBe(false);
+    expect(report.message).toContain('1 of 2');
+    expect(report.checks.find((check) => check.efforts.includes('quick'))?.kind).toBe('auth');
+    expect(report.checks.find((check) => check.efforts.includes('balanced'))?.ok).toBe(true);
   });
 });
