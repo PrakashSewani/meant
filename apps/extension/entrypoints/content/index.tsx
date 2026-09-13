@@ -55,6 +55,9 @@ async function openBar(
   adapter: ReturnType<typeof adapterFor>,
   ctx: Parameters<typeof createShadowRootUi>[0],
 ): Promise<void> {
+  // The command reaches every frame in the tab; only the one the user is typing in opens a bar.
+  if (!document.hasFocus()) return;
+
   const element = activeEditable(adapter);
   if (!element) return;
 
@@ -69,7 +72,12 @@ async function openBar(
   const ui = await createShadowRootUi(ctx, {
     name: 'sayable-bar',
     position: 'overlay',
-    anchor: () => editable.element,
+    // Appended to the document, never inside the editable: a textarea cannot render children, and
+    // inside a rich editor our bar would become part of the message (ARCHITECTURE §7).
+    anchor: () => document.documentElement,
+    // Closed: the page cannot reach our markup, and page CSS cannot reach our styles (invariant:
+    // the host page must not be able to tamper with the bar).
+    mode: 'closed',
     onMount(container) {
       const root = createRoot(container);
       root.render(
@@ -78,6 +86,9 @@ async function openBar(
           register={register}
           intentText={intentText}
           selection={selection}
+          onState={(state) => {
+            ui.shadowHost.dataset.state = state;
+          }}
           onAccept={(text) => {
             if (selection) adapter.replaceSelection(editable, selection, text);
             else adapter.write(editable, text);
@@ -94,6 +105,12 @@ async function openBar(
   });
 
   ui.mount();
+
+  // The dialog takes focus when it opens, so the whole loop is reachable by keyboard. The host
+  // element itself is not focusable (the overlay wrapper has no box), so the container inside
+  // the shadow root is the focus target.
+  ui.uiContainer.tabIndex = -1;
+  ui.uiContainer.focus();
 }
 
 function activeEditable(adapter: ReturnType<typeof adapterFor>): Editable | null {
@@ -115,11 +132,21 @@ interface BarHostProps {
   register: Register;
   intentText: string;
   selection: SelectionInfo | null;
+  onState: (state: BarState) => void;
   onAccept: (text: string) => void;
   onDismiss: () => void;
 }
 
-function BarHost({ hints, register: inferred, intentText, onAccept, onDismiss }: BarHostProps) {
+type BarState = 'streaming' | 'ready' | 'error';
+
+function BarHost({
+  hints,
+  register: inferred,
+  intentText,
+  onState,
+  onAccept,
+  onDismiss,
+}: BarHostProps) {
   const [register, setRegister] = useState(inferred);
   const [effort, setEffort] = useState<Effort>('quick');
   const [attempt, setAttempt] = useState(0);
@@ -127,6 +154,7 @@ function BarHost({ hints, register: inferred, intentText, onAccept, onDismiss }:
   const [errorMessage, setErrorMessage] = useState<string>();
 
   useEffect(() => {
+    onState('streaming');
     const requestId = `r${Date.now().toString(36)}${attempt}`;
     const port = browser.runtime.connect({ name: PORT_NAME });
 
@@ -136,7 +164,11 @@ function BarHost({ hints, register: inferred, intentText, onAccept, onDismiss }:
 
       const event = parsed.data;
       if (event.type === 'chunk') setResult((current) => current + event.text);
-      if (event.type === 'error') setErrorMessage(event.message);
+      if (event.type === 'done') onState('ready');
+      if (event.type === 'error') {
+        setErrorMessage(event.message);
+        onState('error');
+      }
     });
 
     const request: TransformRequest = {
@@ -153,7 +185,7 @@ function BarHost({ hints, register: inferred, intentText, onAccept, onDismiss }:
       port.postMessage({ type: 'cancel', requestId });
       port.disconnect();
     };
-  }, [attempt, effort, intentText, register]);
+  }, [attempt, effort, intentText, register, onState]);
 
   function rerun() {
     setResult('');

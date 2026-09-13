@@ -3,6 +3,8 @@ dist/
 coverage/
 .output/
 .wxt/
+test-results/
+playwright-report/
 *.log
 *.tsbuildinfo
 .DS_Store
