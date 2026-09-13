@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Mark } from '@meant/ui';
 import '@/lib/app.css';
 import {
   BRAND,
@@ -179,7 +180,10 @@ function Popup() {
 
   return (
     <main className="w-72 p-4 text-sm text-neutral-800">
-      <h1 className="text-base font-medium">{BRAND.name}</h1>
+      <div className="flex items-center gap-2">
+        <Mark size={22} className="text-neutral-900 [--meant-mark-cut:white]" />
+        <h1 className="text-base font-medium">{BRAND.name}</h1>
+      </div>
       <p className="mt-1 text-xs text-neutral-500">{BRAND.tagline}</p>
 
       <dl className="mt-3 space-y-1 text-xs">

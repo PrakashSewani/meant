@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Mark } from '@meant/ui';
 import '@/lib/app.css';
 import { DoctorReportSchema, type DoctorReport } from '@meant/core';
 import {
@@ -146,7 +147,10 @@ function Options() {
   return (
     <main className="min-h-screen bg-neutral-100 px-6 py-10 text-sm text-neutral-800">
       <div className="mx-auto max-w-xl">
-        <h1 className="text-xl font-semibold tracking-tight">Meant settings</h1>
+        <div className="flex items-center gap-3">
+          <Mark size={30} className="text-neutral-900 [--meant-mark-cut:white]" />
+          <h1 className="text-xl font-semibold tracking-tight">Meant settings</h1>
+        </div>
         <p className="mt-1 text-xs text-neutral-500">
           Your key and your config stay in this browser profile. Nothing is sent anywhere except the
           provider you pick.
