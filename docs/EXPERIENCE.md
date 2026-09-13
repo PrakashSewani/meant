@@ -102,12 +102,16 @@ Anatomy. Two states: **collapsed** (default) and **expanded** (on demand).
    │  │ Anything else? e.g. "blame is on us, offer a fix"   │  │
    │  └─────────────────────────────────────────────────────┘  │
    │                                                           │
-   │  Effort   Quick · [Balanced] · Deep      ⚙ model: Sonnet  │
+   │  Effort   Quick · [Balanced] · Deep                       │
    └───────────────────────────────────────────────────────────┘
 ```
 
 Rules for the bar:
 
+- **No configuration in the bar.** The bar carries the transform vocabulary only — Who · Tone ·
+  As · Length, plus Effort. Providers, models, keys, voice, theme, and shortcuts live on the
+  extension's own surfaces (popup + options page); the bar may deep-link there (*Open settings*)
+  but never embeds a form. A selection is not the moment to configure anything.
 - **Every chip shows its inferred value.** If inference is confident, it's pre-selected. If not,
   the chip reads *"Who? (guessing: Sarah)"* — never empty, never a blank form.
 - **Only four chips matter:** Who · Tone · As (format) · Length. Effort is a slider. Model is a
@@ -266,6 +270,8 @@ Copy is part of the design. Plain, short, human.
 - ❌ Auto-popover on every text selection.
 - ❌ A persistent chat sidebar.
 - ❌ A settings modal in the critical path.
+- ❌ Provider, model, or key controls inside the Register Bar. Configuration lives on the
+  extension's own surfaces.
 - ❌ Requiring the user to write or see a "prompt."
 - ❌ Silently rewriting the whole document when the user selected one sentence.
 - ❌ Sending page/thread context without an explicit, remembered, per-site opt-in.

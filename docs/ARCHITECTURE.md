@@ -249,6 +249,9 @@ broadening the static list. Chrome match patterns wildcard the port by default, 
   user's shortcut is unassigned, the grip and context menu are the fallbacks.
 - The grip is **off by default** and enabled per site, offered once after the first accepted
   transform.
+- **Transform vocabulary only.** Provider, model, key, voice, and theme controls never render in
+  the bar — they belong to the popup and options page. The bar may deep-link (*Open settings*),
+  never embed a form; model transparency lives in result/error copy, not in a control.
 - **Never reflows the page** (position: fixed, high z-index, pointer-events scoped).
 - Dismisses on: `Esc`, outside click, scroll-away, field blur, or navigation.
 - Reads/writes text through the adapter so native **undo/redo is preserved** (avoid

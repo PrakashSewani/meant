@@ -95,6 +95,9 @@ Do not add a script without wiring it into CI-equivalent local runs.
   CORS, injection framing).
 - **Naming:** adapter ids are lowercase (`slack`, `gmail`, `generic`); recipes use kebab-case
   ids (`jira-user-story`); model refs are `provider/model`.
+- **Configuration lives on extension surfaces.** The Register Bar carries the transform vocabulary
+  (Who · Tone · As · Length + Effort) and nothing else — no provider, model, key, voice, or
+  shortcut controls. The bar may deep-link to the popup/options page; it never embeds a form.
 - **No premature abstraction.** Two similar site adapters is fine; three is when you extract.
 - **Errors are classified, not swallowed.** Use the `auth | cors | rate_limit | quota |
   model_missing | network` taxonomy and map each to user-facing copy.

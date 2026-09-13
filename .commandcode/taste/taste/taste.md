@@ -8,4 +8,6 @@
 - Expects documentation and agent scaffolding to be created proactively for a new project — README.md, AGENTS.md, and organized `docs/` — not just code. Confidence: 0.75
 - Wants the agent to research the internet for relevant knowledge and to create/reuse reusable skills (playbooks) for the work. Confidence: 0.6
 - Treats privacy and user control as fundamental design requirements, not afterthoughts. Confidence: 0.7
+- Keeps configuration/secret surfaces strictly separate from in-page UI: BYOK keys, providers, models, and general settings live in the extension's own surfaces (popup/options page), while in-page/inline surfaces (e.g. the Register Bar) stay free of config controls — they may deep-link to settings but must never embed a config form. Confidence: 0.75
+- Sequences work as spec-then-build: wants decisions and docs written up and committed as their own step before implementation starts, and expects the agent to flag any remaining exploration/risks ("or do you want to explore more") rather than silently jumping into code. Confidence: 0.6
 - Favors phased/staged delivery: ship the simple, self-contained version first and defer heavier infrastructure (accounts, login, cross-device sync, a hosted tier) to "a much later step," gated on the product proving traction. Confidence: 0.65
