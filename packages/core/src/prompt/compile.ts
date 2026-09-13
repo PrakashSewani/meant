@@ -54,11 +54,25 @@ export function compilePrompt({
 
 function renderRegister(register: Register): string[] {
   return [
-    `Audience: ${register.who ?? 'unspecified — keep the original audience'}`,
+    renderAudience(register.who),
     `Tone: ${register.tone?.length ? register.tone.join(', ') : 'unspecified'}`,
     `Format: ${register.format ?? 'unspecified'}`,
     `Length: ${register.length ?? 'unspecified — preserve the original length'}`,
   ];
+}
+
+/**
+ * A named audience is an instruction to write *to* that person, not a label. Without this the
+ * model reads the name as context and produces text addressed to nobody in particular.
+ */
+function renderAudience(who?: string): string {
+  if (!who) return 'Audience: unspecified — keep the original audience';
+
+  return [
+    `Audience: ${who}`,
+    `  Address them by name where this format would — a greeting in an email, a direct address in`,
+    `  a message — and use the name exactly as given. Never invent a surname, title, or other name.`,
+  ].join('\n');
 }
 
 function renderRecipe(recipe?: Recipe): string[] {

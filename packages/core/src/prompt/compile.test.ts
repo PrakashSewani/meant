@@ -15,6 +15,16 @@ describe('compilePrompt', () => {
     expect(system).toContain('Length: short');
   });
 
+  it('tells the model to address a named audience, not just know about them', () => {
+    const named = compilePrompt({ intent: 'the deploy slipped', register: { who: 'Sarah' } });
+    const anonymous = compilePrompt({ intent: 'the deploy slipped', register: {} });
+
+    expect(named.system).toContain('Address them by name where this format would');
+    expect(named.system).toContain('use the name exactly as given');
+    expect(anonymous.system).not.toContain('Address them by name');
+    expect(anonymous.system).toContain('Audience: unspecified');
+  });
+
   it('states when a register field is unspecified rather than leaving it blank', () => {
     const { system } = compilePrompt({ intent: 'hello', register: {} });
 
