@@ -11,14 +11,25 @@ import {
 const EFFORTS: readonly Effort[] = ['quick', 'balanced', 'deep'];
 const LENGTHS: readonly Length[] = ['short', 'medium', 'long'];
 
+/** The light-DOM element hosting the closed shadow root. Both sides of the boundary need it. */
+export const BAR_TAG = 'sayable-bar';
+
+export interface RecipeChoice {
+  id: string;
+  label: string;
+}
+
 export interface BarProps {
   inferredLine: string;
   register: Register;
   effort: Effort;
+  recipes: readonly RecipeChoice[];
+  recipeId: string;
   result?: string;
   errorMessage?: string;
   onRegisterChange?: (register: Register) => void;
   onEffortChange?: (effort: Effort) => void;
+  onRecipeChange?: (id: string) => void;
   onAccept?: () => void;
   onDismiss?: () => void;
 }
@@ -27,10 +38,13 @@ export function Bar({
   inferredLine,
   register,
   effort,
+  recipes,
+  recipeId,
   result,
   errorMessage,
   onRegisterChange,
   onEffortChange,
+  onRecipeChange,
   onAccept,
   onDismiss,
 }: BarProps) {
@@ -39,6 +53,30 @@ export function Bar({
   function change(patch: Partial<Register>) {
     onRegisterChange?.({ ...register, ...patch });
   }
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      // Keys pressed inside a closed shadow root are retargeted to its host, so this also tells
+      // us the key came from the bar and not from the page underneath it.
+      const fromBar = event
+        .composedPath()
+        .some((node) => node instanceof Element && node.tagName.toLowerCase() === BAR_TAG);
+      if (!fromBar) return;
+
+      if (event.key === 'Enter' && result) {
+        event.preventDefault();
+        onAccept?.();
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onDismiss?.();
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown);
+
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [result, onAccept, onDismiss]);
 
   return (
     <div
@@ -50,7 +88,18 @@ export function Bar({
         <span aria-hidden className="text-neutral-400">
           ✦
         </span>
-        <span className="font-medium">Say it better</span>
+        <select
+          value={recipeId}
+          aria-label="Transform"
+          onChange={(event) => onRecipeChange?.(event.target.value)}
+          className="max-w-[10rem] cursor-pointer truncate bg-transparent font-medium text-neutral-900"
+        >
+          {recipes.map((recipe) => (
+            <option key={recipe.id} value={recipe.id}>
+              {recipe.label}
+            </option>
+          ))}
+        </select>
         <button
           type="button"
           aria-expanded={expanded}

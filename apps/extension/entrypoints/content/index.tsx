@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Bar } from '@sayable/ui';
+import { Bar, BAR_TAG } from '@sayable/ui';
 import '@sayable/ui/styles.css';
 import { adapterFor, type Editable, type SelectionInfo } from '@sayable/adapters';
 import {
   InvokeMessageSchema,
   PingMessageSchema,
+  RECIPES,
   StreamEventSchema,
   correctionsBetween,
   curatedMatchPatterns,
@@ -19,7 +20,8 @@ import {
 import { createShadowRootUi } from 'wxt/utils/content-script-ui/shadow-root';
 
 const PORT_NAME = 'sayable-transform';
-const RECIPE_ID = 'say-it-better';
+const DEFAULT_RECIPE_ID = 'say-it-better';
+const RECIPE_CHOICES = RECIPES.map(({ id, label }) => ({ id, label }));
 
 export default defineContentScript({
   matches: curatedMatchPatterns(),
@@ -70,7 +72,7 @@ async function openBar(
   const register = resolveRegister({ hints });
 
   const ui = await createShadowRootUi(ctx, {
-    name: 'sayable-bar',
+    name: BAR_TAG,
     position: 'overlay',
     // Appended to the document, never inside the editable: a textarea cannot render children, and
     // inside a rich editor our bar would become part of the message (ARCHITECTURE §7).
@@ -149,6 +151,7 @@ function BarHost({
 }: BarHostProps) {
   const [register, setRegister] = useState(inferred);
   const [effort, setEffort] = useState<Effort>('quick');
+  const [recipeId, setRecipeId] = useState(DEFAULT_RECIPE_ID);
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState('');
   const [errorMessage, setErrorMessage] = useState<string>();
@@ -177,7 +180,7 @@ function BarHost({
       mode: 'polish',
       register,
       effort,
-      recipeId: RECIPE_ID,
+      recipeId,
     };
     port.postMessage({ type: 'transform', request });
 
@@ -185,7 +188,7 @@ function BarHost({
       port.postMessage({ type: 'cancel', requestId });
       port.disconnect();
     };
-  }, [attempt, effort, intentText, register, onState]);
+  }, [attempt, effort, intentText, register, recipeId, onState]);
 
   function rerun() {
     setResult('');
@@ -207,7 +210,7 @@ function BarHost({
     };
 
     if (hints.fieldRole) event.fieldRole = hints.fieldRole;
-    event.recipeId = RECIPE_ID;
+    event.recipeId = recipeId;
 
     void browser.runtime.sendMessage({ type: 'event', event }).catch(() => undefined);
   }
@@ -217,6 +220,8 @@ function BarHost({
       inferredLine={inferredLine(hints, register)}
       register={register}
       effort={effort}
+      recipes={RECIPE_CHOICES}
+      recipeId={recipeId}
       result={result || undefined}
       errorMessage={errorMessage}
       onRegisterChange={(next) => {
@@ -225,6 +230,10 @@ function BarHost({
       }}
       onEffortChange={(value) => {
         setEffort(value);
+        rerun();
+      }}
+      onRecipeChange={(value) => {
+        setRecipeId(value);
         rerun();
       }}
       onAccept={() => {

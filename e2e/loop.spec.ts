@@ -34,9 +34,7 @@ test('polish, accept, and one native undo puts the original text back', async ()
   const bar = page.locator('sayable-bar');
   await expect(bar).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
 
-  // Keyboard only: the bar takes focus when it opens, then disclosure, then Accept.
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('Tab');
+  // Keyboard only: the bar takes focus when it opens, so ⏎ accepts the result.
   await page.keyboard.press('Enter');
 
   await expect(field).not.toHaveValue(original);

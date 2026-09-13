@@ -1,5 +1,6 @@
 import type { Browser } from 'wxt/browser';
 import {
+  BRAND,
   DoctorRequestSchema,
   PortRequestSchema,
   RecordEventMessageSchema,
@@ -28,6 +29,7 @@ const PORT_NAME = 'sayable-transform';
 const CONFIG_KEY = 'sayable.config';
 const SECRETS_KEY = 'sayable.secrets';
 const EVENTS_KEY = 'sayable.events';
+const CONTEXT_MENU_ID = 'sayable-invoke';
 
 const MOCK_MODEL: ResolvedModel = {
   providerId: 'mock',
@@ -37,13 +39,29 @@ const MOCK_MODEL: ResolvedModel = {
 };
 
 export default defineBackground(() => {
+  // The fallback path: a shortcut can be taken, or unassigned by Chrome, and the product must
+  // still be reachable (invariant 4 — grip, shortcut, or context menu).
+  browser.runtime.onInstalled.addListener(() => {
+    browser.contextMenus.create({
+      id: CONTEXT_MENU_ID,
+      title: `${BRAND.name}…`,
+      contexts: ['editable'],
+    });
+  });
+
+  browser.contextMenus.onClicked.addListener(async (info, tab) => {
+    if (info.menuItemId !== CONTEXT_MENU_ID || tab?.id === undefined) return;
+
+    await invokeIn(tab.id);
+  });
+
   browser.commands.onCommand.addListener(async (command) => {
     if (command !== 'invoke-register-bar') return;
 
     const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
     if (tab?.id === undefined) return;
 
-    await browser.tabs.sendMessage(tab.id, { type: 'invoke-bar' }).catch(() => undefined);
+    await invokeIn(tab.id);
   });
 
   browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
@@ -120,6 +138,11 @@ async function runDoctorHere(): Promise<DoctorReport> {
 
 function post(port: Browser.runtime.Port, event: StreamEvent): void {
   port.postMessage(event);
+}
+
+/** Every frame hears the invoke; only the focused one opens a bar (see the content script). */
+async function invokeIn(tabId: number): Promise<void> {
+  await browser.tabs.sendMessage(tabId, { type: 'invoke-bar' }).catch(() => undefined);
 }
 
 async function recordEvent(event: TransformEvent): Promise<void> {

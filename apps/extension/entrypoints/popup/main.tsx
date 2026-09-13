@@ -140,6 +140,14 @@ function Popup() {
         </div>
       </dl>
 
+      {shortcut === 'unassigned' ? (
+        <p className="mt-3 text-xs text-neutral-600">
+          Chrome left the shortcut unassigned — something else owns it. Set one at{' '}
+          <span className="select-all">chrome://extensions/shortcuts</span>, or right-click any text
+          box and pick {BRAND.name}.
+        </p>
+      ) : null}
+
       {!hasKey || !model ? (
         <p className="mt-3 text-xs text-neutral-600">
           Add a key or run a local model — takes a minute.
