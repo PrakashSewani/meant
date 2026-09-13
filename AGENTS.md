@@ -3,6 +3,24 @@
 Guidance for AI agents and humans working in this repository. Read this before changing code.
 If a change violates a **hard invariant** below, it is wrong regardless of how well it works.
 
+## Working agreement — verification gates the next item
+
+**Nothing starts until the work before it has been verified in a browser by the human.** The test
+suite proves what the code does; only a real browser shows what the browser does with it. This has
+already caught things every unit test called fine: a bar that never rendered, a write path that
+was never exercised, a mark that was four units off centre.
+
+- The open work is [todo.md](./todo.md). The steps are [VERIFICATION.md](./VERIFICATION.md).
+- **Before starting an item: ask whether the outstanding verification passed, and wait for the
+  answer.** Do not start "while waiting", and do not treat silence as a pass.
+- **A failed step is the next thing to fix.** Never answer a red verification with a new item.
+- **Record the outcome in VERIFICATION.md** — what was run, what was seen, which step failed and
+  how. An item with nothing recorded against it is not finished.
+- **Never mark a step as passed on the human's behalf.** If you did not watch it happen, it has
+  not happened, and saying otherwise is worse than saying nothing.
+- The human writes the observation; the agent writes it back into the file. No observation, no
+  pass — "it works" is not a result, "the bar opened bottom-right instead of by the selection" is.
+
 ## What this project is
 
 **Meant** (codename `meant`) — a browser extension that transforms messy intent into the right
@@ -161,6 +179,9 @@ a golden-test update and a note in the PR describing the behavioral change.
    warm, no "AI-powered", no exclamation).
 5. Docs updated if a contract changed (config schema, adapter interface, error taxonomy).
 6. No new permission, model, or surface added without a roadmap check.
+7. **The work is in a browser and the verification steps for it are recorded in
+   [VERIFICATION.md](./VERIFICATION.md)** — with the observation, not the verdict. Until that
+   exists, it is not done, and the next item does not start.
 
 ## Taste
 
