@@ -148,6 +148,9 @@ interface ResolvedModel {
   loopback, plus a runtime origin grant (D-004) and a loopback note.
 - **Presets only in v1:** the shipped provider list is curated, and a preset's origin is
   requested only when the user enables it. Arbitrary custom base URLs wait for v1.x (D-004).
+- **Two entry points:** `@sayable/core` is pure and DOM-free, and `@sayable/core/transports`
+  holds the SDK-backed transports. The content script imports the former, the worker the latter,
+  which keeps the provider SDK out of the page bundle.
 
 ## 5. Storage
 

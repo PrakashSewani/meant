@@ -30,7 +30,9 @@ These are non-negotiable. Violating one is a P0 bug.
    a content-script overlay sees keystrokes that page scripts can read. Key entry and vault
    unlock happen on extension-owned surfaces only.
 2. **No provider calls from content scripts.** Content scripts send intents to the worker over a
-   `Port`. They are subject to the page's CORS policy and are untrusted-adjacent.
+   `Port`. They are subject to the page's CORS policy and are untrusted-adjacent. Transports sit
+   behind `@sayable/core/transports`; content scripts import `@sayable/core` only, so the SDK
+   never enters the page bundle.
 3. **`packages/core` stays pure.** No imports of `chrome`, `window`, `document`, `ui`,
    `adapters`, or `apps`. It must run under plain Node/Vitest. Purity is what makes the register
    engine testable.

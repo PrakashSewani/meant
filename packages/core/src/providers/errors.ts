@@ -1,4 +1,15 @@
-export type ErrorKind = 'auth' | 'cors' | 'rate_limit' | 'quota' | 'model_missing' | 'network';
+import { z } from 'zod';
+
+export const ErrorKindSchema = z.enum([
+  'auth',
+  'cors',
+  'rate_limit',
+  'quota',
+  'model_missing',
+  'network',
+]);
+
+export type ErrorKind = z.infer<typeof ErrorKindSchema>;
 
 export interface ErrorSignals {
   status?: number;
@@ -16,11 +27,31 @@ const RETRYABLE: ReadonlySet<ErrorKind> = new Set<ErrorKind>(['rate_limit', 'net
 
 const NETWORK_MESSAGE =
   /failed to fetch|networkerror|load failed|fetch failed|econnrefused|etimedout|enotfound/i;
+const AUTH_MESSAGE = /api[ -]?key|unauthorized|authentication|invalid key/i;
 const MODEL_MESSAGE = /model/i;
 
 export function classifyError(signals: ErrorSignals): ClassifiedError {
   const kind = kindOf(signals);
   return { kind, retryable: RETRYABLE.has(kind) };
+}
+
+/**
+ * Transport errors arrive as thrown values, and the SDK carries the HTTP status on the error
+ * object rather than in its message. Pull both out before classifying.
+ */
+export function signalsFromError(error: unknown): ErrorSignals {
+  if (!(error instanceof Error)) return {};
+
+  const signals: ErrorSignals = { message: error.message };
+  const status = (error as { statusCode?: unknown }).statusCode;
+  if (typeof status === 'number') signals.status = status;
+
+  const body = (error as { responseBody?: unknown }).responseBody;
+  if (typeof body === 'string' && body.length > 0) {
+    signals.message = `${error.message} ${body}`;
+  }
+
+  return signals;
 }
 
 function kindOf({ status, code, message, hostPermissionGranted }: ErrorSignals): ErrorKind {
@@ -36,6 +67,8 @@ function kindOf({ status, code, message, hostPermissionGranted }: ErrorSignals):
   if (NETWORK_MESSAGE.test(text) || (code !== undefined && NETWORK_MESSAGE.test(code))) {
     return hostPermissionGranted === false ? 'cors' : 'network';
   }
+
+  if (AUTH_MESSAGE.test(text)) return 'auth';
 
   return 'network';
 }

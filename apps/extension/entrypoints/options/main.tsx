@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { DoctorResultSchema, type DoctorResult } from '@sayable/core';
 import {
   PRESETS,
   defaultConfigFor,
@@ -15,8 +16,26 @@ function Options() {
   const [selected, setSelected] = useState<string>('openrouter');
   const [apiKey, setApiKey] = useState('');
   const [status, setStatus] = useState<string>();
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<DoctorResult>();
 
   const preset = presetFor(selected);
+
+  async function testConnection() {
+    setTesting(true);
+    setTestResult(undefined);
+
+    try {
+      const raw = await browser.runtime.sendMessage({ type: 'doctor' });
+      const parsed = DoctorResultSchema.safeParse(raw);
+
+      setTestResult(
+        parsed.success ? parsed.data : { ok: false, message: 'The worker did not answer.' },
+      );
+    } finally {
+      setTesting(false);
+    }
+  }
 
   async function save() {
     if (!preset) return;
@@ -89,7 +108,22 @@ function Options() {
         Save and enable
       </button>
 
+      <button
+        type="button"
+        onClick={() => void testConnection()}
+        disabled={testing}
+        className="mt-6 ml-2 rounded-md border border-neutral-300 px-4 py-2 text-xs font-medium disabled:opacity-50"
+      >
+        {testing ? 'Testing…' : 'Test connection'}
+      </button>
+
       {status ? <p className="mt-3 text-xs text-neutral-600">{status}</p> : null}
+
+      {testResult ? (
+        <p className={`mt-2 text-xs ${testResult.ok ? 'text-neutral-600' : 'text-red-700'}`}>
+          {testResult.message}
+        </p>
+      ) : null}
     </main>
   );
 }

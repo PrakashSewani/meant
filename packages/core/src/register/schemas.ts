@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ErrorKindSchema } from '../providers/errors';
 
 export const LengthSchema = z.enum(['short', 'medium', 'long']);
 
@@ -31,12 +32,16 @@ export const StreamEventSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('error'),
     requestId: z.string().min(1),
-    kind: z.enum(['auth', 'cors', 'rate_limit', 'quota', 'model_missing', 'network']),
+    kind: ErrorKindSchema,
     message: z.string().min(1),
   }),
 ]);
 
 export const InvokeMessageSchema = z.object({ type: z.literal('invoke-bar') });
+
+export const DoctorRequestSchema = z.object({ type: z.literal('doctor') });
+
+export type DoctorRequest = z.infer<typeof DoctorRequestSchema>;
 
 export type TransformRequest = z.infer<typeof TransformRequestSchema>;
 export type PortRequest = z.infer<typeof PortRequestSchema>;

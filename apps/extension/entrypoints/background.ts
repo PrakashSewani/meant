@@ -1,22 +1,34 @@
 import type { Browser } from 'wxt/browser';
 import {
+  DoctorRequestSchema,
   PortRequestSchema,
   classifyError,
   compilePrompt,
   createMockTransport,
   errorCopy,
   getRecipe,
-  parseModelRef,
+  resolveModel,
   resolveRegister,
-  resolveTierRef,
+  runDoctor,
+  signalsFromError,
+  type DoctorResult,
   type Effort,
   type ResolvedModel,
   type StreamEvent,
 } from '@sayable/core';
+import { selectTransport } from '@sayable/core/transports';
 import { validateConfig, type SayableConfig } from '@sayable/config';
 
 const PORT_NAME = 'sayable-transform';
 const CONFIG_KEY = 'sayable.config';
+const SECRETS_KEY = 'sayable.secrets';
+
+const MOCK_MODEL: ResolvedModel = {
+  providerId: 'mock',
+  modelId: 'mock',
+  tier: 'main',
+  transport: 'openai-compatible',
+};
 
 export default defineBackground(() => {
   browser.commands.onCommand.addListener(async (command) => {
@@ -26,6 +38,13 @@ export default defineBackground(() => {
     if (tab?.id === undefined) return;
 
     await browser.tabs.sendMessage(tab.id, { type: 'invoke-bar' }).catch(() => undefined);
+  });
+
+  browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
+    if (!DoctorRequestSchema.safeParse(message).success) return undefined;
+
+    void runDoctorHere().then(sendResponse);
+    return true;
   });
 
   browser.runtime.onConnect.addListener((port) => {
@@ -52,10 +71,10 @@ async function handlePortMessage(
   const recipe = request.recipeId ? getRecipe(request.recipeId) : undefined;
   const register = resolveRegister({ defaults: recipe?.register, overrides: request.register });
   const prompt = compilePrompt({ intent: request.intentText, register, recipe });
-  const model = await resolveModel(request.effort);
+  const model = (await configuredModel(request.effort)) ?? MOCK_MODEL;
 
-  // Real transports land with the provider slice; the pipeline around them is the real thing.
-  const transport = createMockTransport();
+  // With nothing configured yet, the mock keeps the loop demo-able; the popup says so plainly.
+  const transport = model.providerId === 'mock' ? createMockTransport() : selectTransport(model);
 
   try {
     for await (const chunk of transport.stream({ prompt, model, signal })) {
@@ -63,46 +82,41 @@ async function handlePortMessage(
     }
     post(port, { type: 'done', requestId: request.requestId });
   } catch (error) {
-    const classified = classifyError({
-      message: error instanceof Error ? error.message : undefined,
-    });
+    const { kind } = classifyError(signalsFromError(error));
     post(port, {
       type: 'error',
       requestId: request.requestId,
-      kind: classified.kind,
-      message: errorCopy(classified.kind, model.providerId),
+      kind,
+      message: errorCopy(kind, model.providerId),
     });
   }
+}
+
+async function runDoctorHere(): Promise<DoctorResult> {
+  const model = await configuredModel('quick');
+  if (!model) {
+    return { ok: false, kind: 'auth', message: 'No provider is configured yet.' };
+  }
+
+  return runDoctor(selectTransport(model), model);
 }
 
 function post(port: Browser.runtime.Port, event: StreamEvent): void {
   port.postMessage(event);
 }
 
-async function resolveModel(effort: Effort): Promise<ResolvedModel> {
-  const stored = await browser.storage.local.get(CONFIG_KEY);
+async function configuredModel(effort: Effort): Promise<ResolvedModel | undefined> {
+  const stored = await browser.storage.local.get([CONFIG_KEY, SECRETS_KEY]);
   const parsed = validateConfig(stored[CONFIG_KEY]);
+  if (!parsed.ok) return undefined;
 
-  if (parsed.ok) {
-    const ref = resolveTierRef(effort, tierRefsOf(parsed.config));
-    const parts = ref ? parseModelRef(ref) : undefined;
-
-    if (parts) {
-      return {
-        providerId: parts.providerId,
-        modelId: parts.modelId,
-        tier: effort === 'quick' ? 'fast' : effort === 'deep' ? 'reasoning' : 'main',
-        transport: parts.providerId === 'anthropic' ? 'anthropic' : 'openai-compatible',
-      };
-    }
-  }
-
-  return {
-    providerId: 'mock',
-    modelId: 'mock',
-    tier: 'main',
-    transport: 'openai-compatible',
-  };
+  return resolveModel({
+    refs: tierRefsOf(parsed.config),
+    providers: parsed.config.provider,
+    secrets: readSecrets(stored[SECRETS_KEY]),
+    disabledProviders: parsed.config.disabled_providers,
+    effort,
+  });
 }
 
 function tierRefsOf(config: SayableConfig): { fast?: string; main?: string; reasoning?: string } {
@@ -111,4 +125,12 @@ function tierRefsOf(config: SayableConfig): { fast?: string; main?: string; reas
     main: config.model,
     reasoning: config.reasoning_model,
   };
+}
+
+function readSecrets(raw: unknown): Record<string, string> {
+  if (typeof raw !== 'object' || raw === null) return {};
+
+  return Object.fromEntries(
+    Object.entries(raw).filter((entry): entry is [string, string] => typeof entry[1] === 'string'),
+  );
 }
