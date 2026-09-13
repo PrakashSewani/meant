@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { Effort, Length, Register } from '@sayable/core';
+import type { Effort, Length, Register } from '@meant/core';
 import {
   FORMAT_SUGGESTIONS,
   TONE_SUGGESTIONS,
@@ -79,9 +79,9 @@ export function Bar({
     <div
       ref={dialog}
       role="dialog"
-      aria-label="Sayable"
+      aria-label="Meant"
       tabIndex={-1}
-      className="sayable-bar pointer-events-auto fixed right-6 bottom-6 z-[2147483647] w-[26rem] rounded-xl border border-neutral-200 bg-white font-sans text-sm text-neutral-900 shadow-xl"
+      className="meant-bar pointer-events-auto fixed right-6 bottom-6 z-[2147483647] w-[26rem] rounded-xl border border-neutral-200 bg-white font-sans text-sm text-neutral-900 shadow-xl"
     >
       <div className="flex items-center gap-2 px-3 py-2">
         <span aria-hidden className="text-neutral-400">
@@ -220,7 +220,7 @@ function ChipInput({ label, value, placeholder, list, onCommit }: ChipInputProps
     if (draft !== value) onCommit(draft);
   }
 
-  const listId = list ? `sayable-${label.toLowerCase()}-options` : undefined;
+  const listId = list ? `meant-${label.toLowerCase()}-options` : undefined;
 
   return (
     <label className="flex items-center gap-2">

@@ -5,7 +5,7 @@ If a change violates a **hard invariant** below, it is wrong regardless of how w
 
 ## What this project is
 
-**Sayable** (codename `meant`) — a browser extension that transforms messy intent into the right
+**Meant** (codename `meant`) — a browser extension that transforms messy intent into the right
 register for the situation, in any text box, without a chat interface and without prompt
 engineering. Product name lives only in `BRAND` (`packages/core/src/brand.ts`) — never hardcode
 it in UI strings.
@@ -31,7 +31,7 @@ These are non-negotiable. Violating one is a P0 bug.
    unlock happen on extension-owned surfaces only.
 2. **No provider calls from content scripts.** Content scripts send intents to the worker over a
    `Port`. They are subject to the page's CORS policy and are untrusted-adjacent. Transports sit
-   behind `@sayable/core/transports`; content scripts import `@sayable/core` only, so the SDK
+   behind `@meant/core/transports`; content scripts import `@meant/core` only, so the SDK
    never enters the page bundle.
 3. **`packages/core` stays pure.** No imports of `chrome`, `window`, `document`, `ui`,
    `adapters`, or `apps`. It must run under plain Node/Vitest. Purity is what makes the register
@@ -63,7 +63,7 @@ These are non-negotiable. Violating one is a P0 bug.
 apps/extension/       WXT MV3 app. entrypoints/{background,content,popup,options,sidepanel}
 packages/core/        register engine · prompt compiler · voice · provider layer (DOM-free)
 packages/adapters/    SurfaceAdapter implementations: generic + per-site
-packages/config/      SayableConfig Zod schema · presets · opencode.json importer
+packages/config/      MeantConfig Zod schema · presets · opencode.json importer
 packages/ui/          Register Bar, chips, diff view (React, shadow-DOM-safe)
 docs/                 Product, experience, architecture, providers, roadmap, naming, decisions
 .commandcode/skills/  Repo-local agent playbooks (see below)

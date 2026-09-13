@@ -23,16 +23,16 @@ import {
   type ResolvedModel,
   type StreamEvent,
   type TransformEvent,
-} from '@sayable/core';
+} from '@meant/core';
 import { BAR_SCRIPT_PATH, BAR_STYLES_PATH } from '../lib/bar-bridge';
-import { selectTransport } from '@sayable/core/transports';
-import { validateConfig, type SayableConfig } from '@sayable/config';
+import { selectTransport } from '@meant/core/transports';
+import { validateConfig, type MeantConfig } from '@meant/config';
 
-const PORT_NAME = 'sayable-transform';
-const CONFIG_KEY = 'sayable.config';
-const SECRETS_KEY = 'sayable.secrets';
-const EVENTS_KEY = 'sayable.events';
-const CONTEXT_MENU_ID = 'sayable-invoke';
+const PORT_NAME = 'meant-transform';
+const CONFIG_KEY = 'meant.config';
+const SECRETS_KEY = 'meant.secrets';
+const EVENTS_KEY = 'meant.events';
+const CONTEXT_MENU_ID = 'meant-invoke';
 
 const MOCK_MODEL: ResolvedModel = {
   providerId: 'mock',
@@ -203,7 +203,7 @@ async function configuredModel(effort: Effort): Promise<ResolvedModel | undefine
   });
 }
 
-function tierRefsOf(config: SayableConfig): { fast?: string; main?: string; reasoning?: string } {
+function tierRefsOf(config: MeantConfig): { fast?: string; main?: string; reasoning?: string } {
   return {
     fast: config.small_model,
     main: config.model,

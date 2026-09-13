@@ -1,6 +1,6 @@
 ---
 name: transform-recipe
-description: Author or change a Sayable transform recipe — the named register + prompt bundle users pick instead of writing prompts. Use when adding a recipe (Jira story, customer apology, PR description), tuning prompt behavior, or changing guardrails, and when golden prompt snapshots need updating.
+description: Author or change a Meant transform recipe — the named register + prompt bundle users pick instead of writing prompts. Use when adding a recipe (Jira story, customer apology, PR description), tuning prompt behavior, or changing guardrails, and when golden prompt snapshots need updating.
 ---
 
 # Author a transform recipe

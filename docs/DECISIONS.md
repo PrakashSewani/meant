@@ -43,7 +43,7 @@ counts, no ML, no network — and it raises accept rate without touching prompt 
 
 **Consequences.**
 
-- New local store `sayable.priors`: capped, wipeable, never synced, never sent as data. Priors
+- New local store `meant.priors`: capped, wipeable, never synced, never sent as data. Priors
   reach a prompt only as constraints, exactly like the Register and Voice.
 - Learned defaults are **visible and revocable**. A hidden learned default reads as a bug.
 - Adds a layer to the register engine ([PRODUCT.md](./PRODUCT.md#7-what-intelligence-means-here))
@@ -58,8 +58,8 @@ counts, no ML, no network — and it raises accept rate without touching prompt 
 **Decision.** The manifest declares a **bounded optional host-permission set** — the shipped
 provider presets plus loopback — and nothing else. Origins are granted at **runtime**, one
 provider or one site at a time, from a user gesture on an extension page
-(`chrome.permissions.request`) and revocable the same way. Custom provider base URLs — arbitrary
-origins — are deferred to v1.x.
+(`chrome.permissions.request`) and revocable the same way. Custom provider base URLs are supported through that same flow: the user describes the
+endpoint, and enabling it grants exactly that origin.
 
 **Why.** "`host_permissions` contains only the origins the user configures" is not expressible
 in a static MV3 manifest. Without optional permissions, every non-preset provider and every
@@ -76,8 +76,8 @@ declared set enumerable.
   is broad; the grant is not. One origin, from a click in the popup, revocable there, and nothing
   is granted at install.
 - v1 ships a curated provider list (Anthropic, OpenAI, OpenRouter, Groq, Gemini, and local
-  Ollama / LM Studio / llama.cpp). "Any OpenAI-compatible endpoint" waits for v1.x and the same
-  runtime-grant flow.
+  Ollama / LM Studio / llama.cpp) **and** a custom endpoint form for anything OpenAI-shaped that is
+  not listed — a gateway, a proxy, someone’s own server.
 - Sites outside the curated content-script list are enabled with a runtime grant _followed by_
   `chrome.scripting.registerContentScripts` — never by broadening the static list.
 - The curated hosts are declared in `host_permissions`, not only as content-script matches: the
@@ -109,7 +109,7 @@ posture for zero user benefit (keys can't roam without breaking the "no cloud" p
   on the extension can read it. Documented, not hidden; local models and BYO-gateways are the
   answer for high-sensitivity users.
 - Secrets don't sync, so a second device means re-entering keys. The shareable
-  `sayable.config.json` (providers/models, no secrets) is what travels.
+  `meant.config.json` (providers/models, no secrets) is what travels.
 - A future accounts tier must sync the vault **end-to-end encrypted** (server = ciphertext only)
   — see D-002.
 
@@ -129,7 +129,7 @@ distracting from the register engine — the actual differentiator.
 **Consequences.**
 
 - Docs say **"no backend required"**, not "zero backend": the hosted tier is _another provider
-  behind the same interface_ (`sayable`), never a requirement, and never disables BYOK or local.
+  behind the same interface_ (`meant`), never a requirement, and never disables BYOK or local.
 - Any future sync is E2E-encrypted and opt-in per data class; secrets and Voice never sync in
   plaintext.
 - "No telemetry by default" holds. A hosted tier adds exactly one network destination (our

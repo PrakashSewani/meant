@@ -1,4 +1,4 @@
-import type { Register, RegisterHints } from '@sayable/core';
+import type { Register, RegisterHints } from '@meant/core';
 
 export type BarState = 'streaming' | 'ready' | 'error';
 
@@ -15,7 +15,7 @@ export interface BarHostRequest {
 
 export type BarMount = (request: BarHostRequest) => (() => void) | Promise<() => void>;
 
-const MOUNT_KEY = '__sayableMountBar';
+const MOUNT_KEY = '__meantMountBar';
 
 /** Emitted by `entrypoints/bar.ts`, as the extension sees it. */
 export const BAR_SCRIPT_PATH = '/bar.js';

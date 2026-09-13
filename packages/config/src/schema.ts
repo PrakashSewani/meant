@@ -28,7 +28,7 @@ export const ProviderConfigSchema = z.object({
   models: z.record(z.string(), ModelConfigSchema).optional(),
 });
 
-export const SayableConfigSchema = z.object({
+export const MeantConfigSchema = z.object({
   $schema: z.string().optional(),
   model: z.string().min(1).optional(),
   small_model: z.string().min(1).optional(),
@@ -38,7 +38,7 @@ export const SayableConfigSchema = z.object({
   enabled_providers: z.array(z.string().min(1)).optional(),
 });
 
-export type SayableConfig = z.infer<typeof SayableConfigSchema>;
+export type MeantConfig = z.infer<typeof MeantConfigSchema>;
 
 export const OPENCODE_IGNORED_KEYS = [
   'agent',
@@ -59,10 +59,10 @@ export interface ConfigWarning {
 }
 
 export type ValidateResult =
-  { ok: true; config: SayableConfig } | { ok: false; issues: readonly string[] };
+  { ok: true; config: MeantConfig } | { ok: false; issues: readonly string[] };
 
 export function validateConfig(input: unknown): ValidateResult {
-  const parsed = SayableConfigSchema.safeParse(input);
+  const parsed = MeantConfigSchema.safeParse(input);
 
   if (parsed.success) return { ok: true, config: parsed.data };
 
@@ -85,7 +85,7 @@ export function lintConfig(input: unknown): readonly ConfigWarning[] {
       warnings.push({
         code: 'unknown-key',
         path: providerId,
-        message: `“${providerId}” is an OpenCode key Sayable ignores — nothing was imported from it.`,
+        message: `“${providerId}” is an OpenCode key Meant ignores — nothing was imported from it.`,
       });
     }
   }

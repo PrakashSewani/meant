@@ -58,7 +58,7 @@ export const BarStylesRequestSchema = z.object({ type: z.literal('bar-styles') }
 
 export const BarStylesResponseSchema = z.object({ css: z.string() });
 
-export const PingMessageSchema = z.object({ type: z.literal('sayable-ping') });
+export const PingMessageSchema = z.object({ type: z.literal('meant-ping') });
 
 export const PingResponseSchema = z.object({ alive: z.literal(true) });
 

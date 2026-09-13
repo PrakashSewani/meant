@@ -1,11 +1,11 @@
 ---
 name: surface-adapter
-description: Add support for a new site or app in Sayable by implementing a SurfaceAdapter that adds register inference only. Use when adding Gmail, Slack, LinkedIn, Jira, GitHub, Linear, Notion, or any new text surface, or when a site's DOM change breaks inference.
+description: Add support for a new site or app in Meant by implementing a SurfaceAdapter that adds register inference only. Use when adding Gmail, Slack, LinkedIn, Jira, GitHub, Linear, Notion, or any new text surface, or when a site's DOM change breaks inference.
 ---
 
 # Add a surface adapter
 
-Sayable is **one product, not nine integrations**. The universal adapter handles all editable
+Meant is **one product, not nine integrations**. The universal adapter handles all editable
 fields; a site adapter only improves _inference_. It must never add behavior, and it must never
 be required for the product to work.
 

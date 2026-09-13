@@ -15,22 +15,22 @@ port over.
    provider block and go.
 4. **BYOK is the free path.** No required subscription and no upsell pressure. Your key, your
    bill, your model. A hosted tier with free trials may come later, but it's one more provider
-   preset behind the same interface (id `sayable`) — never a fork, never a requirement.
+   preset behind the same interface (id `meant`) — never a fork, never a requirement.
 5. **Local models are first-class**, not a footnote — the ultimate privacy answer.
 
 ## 2. Config format
 
-Sayable's config is a **subset of `opencode.json` plus one extension key** (`reasoning_model`),
+Meant's config is a **subset of `opencode.json` plus one extension key** (`reasoning_model`),
 so a file you already maintain is mostly valid as-is. Two files: a shareable config (no secrets)
 and a local vault (secrets).
 
 ```jsonc
-// sayable.config.json  — safe to sync/commit; contains NO secrets
+// meant.config.json  — safe to sync/commit; contains NO secrets
 {
-  "$schema": "https://sayable.app/config.json",
+  "$schema": "https://meant.app/config.json",
   "model": "anthropic/claude-sonnet-4-5", // balanced / default
   "small_model": "anthropic/claude-haiku-4-5", // quick tier
-  "reasoning_model": "anthropic/claude-opus-4-5", // deep tier (Sayable extension)
+  "reasoning_model": "anthropic/claude-opus-4-5", // deep tier (Meant extension)
   "provider": {
     "anthropic": {
       "options": { "baseURL": "https://api.anthropic.com/v1" },
@@ -57,7 +57,7 @@ and a local vault (secrets).
 | ------------------------------------------ | ------------------ | ---------------------------------------------------------------------------------------- |
 | `model`                                    | `"provider/model"` | Balanced/default tier.                                                                   |
 | `small_model`                              | `"provider/model"` | Quick tier — cheap, fast, short transforms.                                              |
-| `reasoning_model`                          | `"provider/model"` | Deep tier — long docs, nuanced register. _(Sayable extension; ignored by OpenCode.)_     |
+| `reasoning_model`                          | `"provider/model"` | Deep tier — long docs, nuanced register. _(Meant extension; ignored by OpenCode.)_       |
 | `provider.<id>.npm`                        | string             | Transport hint: `@ai-sdk/anthropic` or `@ai-sdk/openai-compatible`. Inferred if omitted. |
 | `provider.<id>.name`                       | string             | Display name.                                                                            |
 | `provider.<id>.options.baseURL`            | string             | Endpoint. Required for custom providers.                                                 |
@@ -70,7 +70,7 @@ and a local vault (secrets).
 
 The importer (`packages/config`) accepts an `opencode.json`/`.jsonc` and maps it:
 
-| OpenCode                                                                               | Sayable            | Note                                                                                                                      |
+| OpenCode                                                                               | Meant              | Note                                                                                                                      |
 | -------------------------------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------- |
 | `provider`, `model`, `small_model`                                                     | same               | Direct.                                                                                                                   |
 | `options.baseURL`, `options.headers`, `models`, `limit`                                | same               | Direct.                                                                                                                   |
@@ -85,7 +85,7 @@ which keys are needed.
 Two adapters cover virtually every provider:
 
 - **`anthropic`** — Anthropic Messages API. Browser-origin calls **require** the header
-  `anthropic-dangerous-direct-browser-access: true`; Sayable sets it automatically for
+  `anthropic-dangerous-direct-browser-access: true`; Meant sets it automatically for
   Anthropic-transport providers. (The name is alarming; it is Anthropic's opt-in flag for
   client-side apps. Here the "client" is your extension's service worker, not a public website,
   and the key stays in your vault.)
@@ -130,9 +130,11 @@ auth style, a couple of model IDs, and a browser-CORS note.
 | llama.cpp (local)                                          | openai-compatible            | `http://127.0.0.1:8080/v1`                                 | Fully local.                                                         |
 | Azure OpenAI                                               | openai-compatible (advanced) | `https://<res>.openai.azure.com/`                          | Needs `api-version` + deployment-name mapping.                       |
 
-**Custom base URLs are deferred to v1.x** (D-004): an arbitrary origin needs its own runtime
-per-origin grant, and v1 ships a curated preset list instead. Pick a preset or a local model —
-no URL typing in the first release.
+**Custom endpoints are a first-class flow.** Pick **Custom (OpenAI-compatible)**, give it an id,
+a base URL, a key, and the model ids you want per tier. The only thing that makes it different
+from a preset is that its origin is not in the manifest’s declared list, so enabling it asks for
+that origin at runtime (D-004) — one prompt, revocable, and the same transport handles it. Reach
+for a preset when one exists; a preset is a custom endpoint someone already got right.
 
 ## 7. Local models
 

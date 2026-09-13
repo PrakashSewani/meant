@@ -202,16 +202,16 @@ importers:
 
   apps/extension:
     dependencies:
-      '@sayable/adapters':
+      '@meant/adapters':
         specifier: workspace:*
         version: link:../../packages/adapters
-      '@sayable/config':
+      '@meant/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@sayable/core':
+      '@meant/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@sayable/ui':
+      '@meant/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       react:
@@ -248,7 +248,7 @@ importers:
 
   packages/adapters:
     dependencies:
-      '@sayable/core':
+      '@meant/core':
         specifier: workspace:*
         version: link:../core
 
@@ -275,7 +275,7 @@ importers:
 
   packages/ui:
     dependencies:
-      '@sayable/core':
+      '@meant/core':
         specifier: workspace:*
         version: link:../core
       react:

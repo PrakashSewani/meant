@@ -117,7 +117,7 @@ dependency**, so it is unit-testable and reusable. Full spec in
 interface ProviderRegistry {
   resolve(modelRef: string): ResolvedModel; // "anthropic/claude-sonnet-4-5"
   models(): ModelDescriptor[]; // for the picker
-  validate(config: SayableConfig): ValidationResult;
+  validate(config: MeantConfig): ValidationResult;
 }
 
 interface ResolvedModel {
@@ -148,7 +148,7 @@ interface ResolvedModel {
   loopback, plus a runtime origin grant (D-004) and a loopback note.
 - **Presets only in v1:** the shipped provider list is curated, and a preset's origin is
   requested only when the user enables it. Arbitrary custom base URLs wait for v1.x (D-004).
-- **Two entry points:** `@sayable/core` is pure and DOM-free, and `@sayable/core/transports`
+- **Two entry points:** `@meant/core` is pure and DOM-free, and `@meant/core/transports`
   holds the SDK-backed transports. The content script imports the former, the worker the latter,
   which keeps the provider SDK out of the page bundle.
 
@@ -156,14 +156,14 @@ interface ResolvedModel {
 
 | Key                      | Contents                                                      | Notes                                                                                                           |
 | ------------------------ | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `sayable.config`         | Provider config (OpenCode subset)                             | No secrets.                                                                                                     |
-| `sayable.secrets`        | API keys                                                      | Encrypted with AES-GCM + PBKDF2 if a passphrase is set; otherwise OS-protected extension storage. Never synced. |
-| `sayable.voice`          | Learned Voice profile                                         | Local only, never sent except inside a prompt.                                                                  |
-| `sayable.recipes`        | User recipes                                                  | Local; importable/exportable as JSON.                                                                           |
-| `sayable.sites`          | Per-site opt-ins (grip, context sharing)                      | User-controlled, revocable.                                                                                     |
-| `sayable.priors`         | Register memory: chip corrections per surface + field role    | Local, capped, wipeable, never synced. Applied priors are visible in the chip and resettable.                   |
-| `sayable.history`        | Last N transforms (opt-in, default off)                       | Local, capped, wipeable.                                                                                        |
-| `sayable.events`         | Transform metadata: register sent, corrections, accepted flag | Local, capped at 200, wipeable from the popup. **No text content, ever.**                                       |
+| `meant.config`           | Provider config (OpenCode subset)                             | No secrets.                                                                                                     |
+| `meant.secrets`          | API keys                                                      | Encrypted with AES-GCM + PBKDF2 if a passphrase is set; otherwise OS-protected extension storage. Never synced. |
+| `meant.voice`            | Learned Voice profile                                         | Local only, never sent except inside a prompt.                                                                  |
+| `meant.recipes`          | User recipes                                                  | Local; importable/exportable as JSON.                                                                           |
+| `meant.sites`            | Per-site opt-ins (grip, context sharing)                      | User-controlled, revocable.                                                                                     |
+| `meant.priors`           | Register memory: chip corrections per surface + field role    | Local, capped, wipeable, never synced. Applied priors are visible in the chip and resettable.                   |
+| `meant.history`          | Last N transforms (opt-in, default off)                       | Local, capped, wipeable.                                                                                        |
+| `meant.events`           | Transform metadata: register sent, corrections, accepted flag | Local, capped at 200, wipeable from the popup. **No text content, ever.**                                       |
 | `chrome.storage.session` | Unlocked vault keys                                           | Memory-only, cleared on browser restart, never visible to content scripts.                                      |
 
 `chrome.storage.sync` is used **only** for non-sensitive prefs (theme, shortcut). Secrets and
@@ -195,7 +195,7 @@ extension-owned surface. The Provider doctor is gated the same way.
 ### Privacy posture (a feature, not a page)
 
 - **No backend required.** Today the extension talks only to the provider _you_ configure; there
-  is no Sayable server in the loop. A future hosted tier (see [DECISIONS.md](./DECISIONS.md)) is
+  is no Meant server in the loop. A future hosted tier (see [DECISIONS.md](./DECISIONS.md)) is
   _another provider behind the same interface_ — opt-in, never a requirement, and it never
   disables the BYOK or local paths.
 - **Local-first by default.** Inference, voice, recipes, and history live on device.
@@ -213,7 +213,7 @@ extension-owned surface. The Provider doctor is gated the same way.
   "manifest_version": 3,
   "permissions": ["storage", "contextMenus", "activeTab", "scripting", "alarms"],
   "optional_permissions": ["sidePanel"],
-  // The curated hosts. Sayable ships support for these, and the grant is also what lets the
+  // The curated hosts. Meant ships support for these, and the grant is also what lets the
   // worker inject the bar bundle on first invoke — a content-script match does not (D-004).
   "host_permissions": [
     "https://mail.google.com/*",
@@ -291,7 +291,7 @@ meant/                        # codename; product name lives in BRAND
 ├── packages/
 │   ├── core/                 # register engine, prompt compiler, voice, provider layer (no DOM/chrome)
 │   ├── adapters/             # SurfaceAdapter implementations (generic + per-site)
-│   ├── config/               # SayableConfig Zod schema, presets, OpenCode importer
+│   ├── config/               # MeantConfig Zod schema, presets, OpenCode importer
 │   └── ui/                   # Register Bar + chips (React, shadow-DOM safe)
 ├── docs/
 └── .commandcode/skills/      # agent playbooks for this repo

@@ -1,18 +1,18 @@
 import { defineConfig } from 'wxt';
 import tailwindcss from '@tailwindcss/vite';
-import { curatedMatchPatterns } from '@sayable/core';
-import { PROVIDER_ORIGINS } from '@sayable/config';
+import { curatedMatchPatterns } from '@meant/core';
+import { PROVIDER_ORIGINS } from '@meant/config';
 
 export default defineConfig({
   modules: ['@wxt-dev/module-react'],
-  zip: { name: 'sayable' },
+  zip: { name: 'meant' },
   vite: () => ({
     plugins: [tailwindcss()],
   }),
   manifest: {
-    name: 'Sayable',
+    name: 'Meant',
     description: 'Turn messy intent into the right register, in any text box.',
-    // The curated hosts are the sites Sayable ships support for. The grant is also what lets the
+    // The curated hosts are the sites Meant ships support for. The grant is also what lets the
     // worker inject the bar bundle into a frame on first invoke — a content-script match alone
     // does not permit that. Everything else stays optional (D-004).
     host_permissions: curatedMatchPatterns(),

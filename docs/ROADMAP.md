@@ -24,9 +24,9 @@ The whole product, at minimum, on the most generic surface.
 - **Mode:** Polish only (select rough text → transform in place).
 - **UI:** the Register Bar, collapsed + expanded. Four chips (Who/Tone/As/Length) + Effort.
 - **Recipes:** three universal ones — _Say it better_, _Make it shorter_, _Fix the tone_.
-- **Providers:** curated presets only — Anthropic plus a few `openai-compatible` vendors — and
-  Ollama / LM Studio on loopback. The origin is granted at runtime when you enable one (D-004);
-  custom base URLs wait for v1.x.
+- **Providers:** curated presets (Anthropic plus a few `openai-compatible` vendors) and Ollama /
+  LM Studio on loopback, **plus a custom OpenAI-compatible endpoint** for anything not listed. The
+  origin is granted at runtime when you enable one (D-004).
 - **Trigger:** `chrome.commands` (`Alt+J` default, remappable) plus the context menu; the grip is
   off by default. A browser-owned shortcut can never be the default.
 - **Measured:** the inference golden corpus lands _with_ the register engine, not after it —
@@ -69,7 +69,7 @@ first-token < 2.5 s on Quick; a fresh user reaches a first accepted transform in
 
 ## v1.x — Depth without weight
 
-- **Custom providers:** arbitrary base URLs behind a runtime per-origin grant (D-004).
+- **Custom providers:** arbitrary base URLs behind a runtime per-origin grant (D-004). **Shipped in v0.1** — the options page carries the form, so this left v1.x.
 - **More surfaces:** Linear, Notion, Outlook Web, Zendesk, Discord, X/Twitter, Google Docs.
 - **Recipe portability:** save any accepted transform as a recipe; export/import as JSON.
 - **Firefox build** (WXT makes this cheap) and an i18n pass (recipes become per-locale bundles).
@@ -111,7 +111,7 @@ of them may weaken the local/BYOK path or the privacy posture. See
 
 - Offered as a **convenience**, so a non-technical user can try it in one click without hunting
   for a key — the on-ramp BYOK lacks.
-- Implemented as **one more provider preset** (`sayable`, OpenAI-compatible transport) behind the
+- Implemented as **one more provider preset** (`meant`, OpenAI-compatible transport) behind the
   same interface. No architectural fork, no privileged code path.
 - Free trials need server-side metering, quotas, and abuse controls; metering must be **visible to
   the user**, and it is the _only_ new outbound destination this adds.

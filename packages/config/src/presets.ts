@@ -1,4 +1,4 @@
-import type { SayableConfig } from './schema.ts';
+import type { MeantConfig } from './schema.ts';
 
 export type TransportId = 'anthropic' | 'openai-compatible';
 
@@ -167,10 +167,10 @@ export function providerBlockFor(preset: ProviderPreset): Record<string, unknown
   };
 }
 
-export function defaultConfigFor(preset: ProviderPreset): SayableConfig {
+export function defaultConfigFor(preset: ProviderPreset): MeantConfig {
   const refs = tierRefsFor(preset);
-  const config: SayableConfig = {
-    $schema: 'https://sayable.app/config.json',
+  const config: MeantConfig = {
+    $schema: 'https://meant.app/config.json',
     provider: { [preset.id]: providerBlockFor(preset) },
   };
 

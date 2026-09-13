@@ -10,6 +10,7 @@
 - Wants the agent to research the internet for relevant knowledge and to create/reuse reusable skills (playbooks) for the work. Confidence: 0.6
 - Treats privacy and user control as fundamental design requirements, not afterthoughts. Confidence: 0.7
 - Keeps configuration/secret surfaces strictly separate from in-page UI: BYOK keys, providers, models, and general settings live in the extension's own surfaces (popup/options page), while in-page/inline surfaces (e.g. the Register Bar) stay free of config controls — they may deep-link to settings but must never embed a config form. Confidence: 0.75
+- Wants a runnable, ready-to-load build artifact so they can test/dogfood the product themselves (e.g. "produce a build for me to test") — expects work to end in something they can actually run, not just code and tests. Confidence: 0.6
 - Sequences work as spec-then-build: wants decisions and docs written up and committed as their own step before implementation starts, and expects the agent to flag any remaining exploration/risks ("or do you want to explore more") rather than silently jumping into code. Confidence: 0.6
 - Expects implementation in TypeScript ("typescript ofc") with a deliberately organized folder structure — e.g. a pnpm workspace split into separate packages (core, config, adapters, ui) and an app — rather than a flat repo. Confidence: 0.7
 - Wants tests and CI workflows set up as part of the initial scaffold, not bolted on later (explicitly asks for "tests and workflows" when kicking off implementation). Confidence: 0.7

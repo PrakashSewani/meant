@@ -1,5 +1,5 @@
 {
-  "name": "sayable",
+  "name": "meant",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -10,16 +10,16 @@
     "node": ">=24"
   },
   "scripts": {
-    "dev": "pnpm --filter @sayable/extension dev",
-    "build": "pnpm --filter @sayable/extension build",
-    "zip": "pnpm --filter @sayable/extension zip",
+    "dev": "pnpm --filter @meant/extension dev",
+    "build": "pnpm --filter @meant/extension build",
+    "zip": "pnpm --filter @meant/extension zip",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "pnpm --filter @sayable/extension build && playwright test",
+    "test:e2e": "pnpm --filter @meant/extension build && playwright test",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
-    "validate:config": "pnpm --filter @sayable/config validate",
+    "validate:config": "pnpm --filter @meant/config validate",
     "check": "pnpm -r --include-workspace-root typecheck && pnpm lint && pnpm test && pnpm validate:config"
   },
   "devDependencies": {

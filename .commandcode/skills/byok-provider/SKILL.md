@@ -1,6 +1,6 @@
 ---
 name: byok-provider
-description: Add or change a BYOK provider or model preset in Sayable — pick the transport, wire the preset and host permission, store the key in the vault, and prove it with a doctor test. Use when adding a provider, model, gateway, or local model to the extension's config.
+description: Add or change a BYOK provider or model preset in Meant — pick the transport, wire the preset and host permission, store the key in the vault, and prove it with a doctor test. Use when adding a provider, model, gateway, or local model to the extension's config.
 ---
 
 # Add a BYOK provider
@@ -14,7 +14,7 @@ Read [docs/PROVIDERS.md](../../../docs/PROVIDERS.md) and the hard invariants in
 [AGENTS.md](../../../AGENTS.md). Two rules dominate this task:
 
 - **Keys never go in the shareable config.** They belong in the encrypted vault
-  (`sayable.secrets`), decrypted only in the service worker during a call.
+  (`meant.secrets`), decrypted only in the service worker during a call.
 - **Only the service worker calls providers.** Never add a fetch path from a content script.
 
 ## Steps
@@ -84,8 +84,10 @@ Read [docs/PROVIDERS.md](../../../docs/PROVIDERS.md) and the hard invariants in
 - **Local model?** Mark `local: true`. Do not require a key. Do not add a cloud fallback.
 - **Gateway vs direct?** Both are just `openai-compatible` with a different `baseURL`; do not
   build a gateway abstraction.
-- **A provider with a non-preset origin?** Not in v1 — custom base URLs are deferred to v1.x
-  (D-004). Add a preset instead of a free-text URL field.
+- **A provider with a non-preset origin?** Supported: the options page has a custom
+  OpenAI-compatible form (id, base URL, model ids, key) whose origin is granted at runtime
+  (D-004). Add a preset anyway when a provider is common — a preset is a custom endpoint someone
+  already got right, without the typing.
 
 ## Worked example: Groq
 
@@ -99,6 +101,6 @@ tier."
 
 - [ ] `pnpm validate:config` passes.
 - [ ] Doctor test passes with a key, and classifies a bad key correctly without one.
-- [ ] No key appears in `sayable.config`; the origin is in the bounded optional list and granted
+- [ ] No key appears in `meant.config`; the origin is in the bounded optional list and granted
       at runtime.
 - [ ] `docs/PROVIDERS.md` preset table updated.

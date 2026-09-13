@@ -1,5 +1,5 @@
 /**
- * Where the content script runs without the user enabling anything, and the only hosts Sayable
+ * Where the content script runs without the user enabling anything, and the only hosts Meant
  * ships with access to. Everything else is granted per origin at runtime (D-004).
  *
  * `localhost` is the dev fixture host: the page the browser suite and manual dogfooding drive.

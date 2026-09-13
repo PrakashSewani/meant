@@ -1,4 +1,4 @@
-import { adapterFor, type Editable } from '@sayable/adapters';
+import { adapterFor, type Editable } from '@meant/adapters';
 import {
   BAR_TAG,
   BarStylesResponseSchema,
@@ -6,7 +6,7 @@ import {
   PingMessageSchema,
   curatedMatchPatterns,
   resolveRegister,
-} from '@sayable/core';
+} from '@meant/core';
 import { barMount } from '../../lib/bar-bridge';
 
 export default defineContentScript({
@@ -16,9 +16,9 @@ export default defineContentScript({
   main() {
     // A site enabled at runtime gets this file injected on demand as well as registered for
     // later navigations, so the frame may already be initialised.
-    const frame = globalThis as { __sayableLoaded?: boolean };
-    if (frame.__sayableLoaded) return;
-    frame.__sayableLoaded = true;
+    const frame = globalThis as { __meantLoaded?: boolean };
+    if (frame.__meantLoaded) return;
+    frame.__meantLoaded = true;
 
     const adapter = adapterFor(new URL(location.href));
 
@@ -95,27 +95,27 @@ async function openBar(adapter: ReturnType<typeof adapterFor>): Promise<void> {
  */
 async function ensureBar(): Promise<ReturnType<typeof barMount>> {
   if (!barMount()) {
-    const frame = globalThis as { __sayableBarInjected?: Promise<unknown> };
-    frame.__sayableBarInjected ??= browser.runtime.sendMessage({ type: 'bar-script' });
+    const frame = globalThis as { __meantBarInjected?: Promise<unknown> };
+    frame.__meantBarInjected ??= browser.runtime.sendMessage({ type: 'bar-script' });
 
-    await frame.__sayableBarInjected;
+    await frame.__meantBarInjected;
   }
 
   const mount = barMount();
-  if (!mount) console.error('Sayable: the bar script did not load, so the bar cannot open.');
+  if (!mount) console.error('Meant: the bar script did not load, so the bar cannot open.');
 
   return mount;
 }
 
 /** Fetched once per frame and reused: the worker hands it over, so the page never sees a path. */
 async function ensureStyles(): Promise<string> {
-  const frame = globalThis as { __sayableStyles?: Promise<string> };
-  frame.__sayableStyles ??= browser.runtime
+  const frame = globalThis as { __meantStyles?: Promise<string> };
+  frame.__meantStyles ??= browser.runtime
     .sendMessage({ type: 'bar-styles' })
     .then((response) => BarStylesResponseSchema.parse(response).css)
     .catch(() => '');
 
-  return frame.__sayableStyles;
+  return frame.__meantStyles;
 }
 
 function activeEditable(adapter: ReturnType<typeof adapterFor>): Editable | null {

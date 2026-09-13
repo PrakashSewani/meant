@@ -1,4 +1,4 @@
-import type { RegisterHints } from '@sayable/core';
+import type { RegisterHints } from '@meant/core';
 
 export type EditableKind = 'textarea' | 'input' | 'contenteditable';
 

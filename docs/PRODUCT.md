@@ -1,6 +1,6 @@
 # Product Thesis
 
-> **Sayable** — write it messy, say it right, everywhere.
+> **Meant** — write it messy, say it right, everywhere.
 > Codename: `meant` (the repo). See [NAMING.md](./NAMING.md) for why the working name changed.
 
 ## 1. The reframe: this is a _register_ problem, not a writing problem
@@ -17,7 +17,7 @@ So the product is not a grammar checker and not a chatbot. It is a **register la
 what you mean and what you send. One thought, many voices. You supply the meaning in your own
 messy words; the product supplies the register.
 
-**One-liner:** Sayable turns messy intent into the right words for the room — in any text box,
+**One-liner:** Meant turns messy intent into the right words for the room — in any text box,
 without a chat thread.
 
 ## 2. Why the incumbents lose this job
@@ -30,7 +30,7 @@ without a chat thread.
 | **Raycast AI / launchers**    | Power-user commands       | Keyboard-elite, not in the field, not aware of the page's social context.                                    |
 | **Notion/Gmail AI**           | In-app generation         | Trapped in one app. Inconsistent everywhere else.                                                            |
 
-Every one of them makes you **learn prompt engineering** or **leave the text box**. Sayable's
+Every one of them makes you **learn prompt engineering** or **leave the text box**. Meant's
 whole reason to exist is that it does neither: it meets the text where it already is and asks
 only for the intent, not a prompt.
 
@@ -135,7 +135,7 @@ Layers 1–4 and 7 are ours. Layer 6 is commodity by design.
 ## 8. Why it survives the novelty cliff
 
 Most AI writing extensions are installed, tried once, and forgotten because they solve a
-one-time curiosity, not a recurring pain. What makes Sayable sticky:
+one-time curiosity, not a recurring pain. What makes Meant sticky:
 
 - **A repeated painful task, hit constantly.** Not "write a blog post" (rare) but "answer this
   Slack message" (dozens of times a day).

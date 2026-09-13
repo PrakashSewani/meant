@@ -1,5 +1,5 @@
-import { inferRegister } from '@sayable/core';
-import type { RegisterHints } from '@sayable/core';
+import { inferRegister } from '@meant/core';
+import type { RegisterHints } from '@meant/core';
 import type { Editable, EditableKind, SelectionInfo, SurfaceAdapter } from './types';
 import { insertIntoEditable, readEditable, replaceSelection } from './write';
 

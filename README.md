@@ -1,14 +1,14 @@
-# Sayable
+# Meant
 
 **Say what you mean.**
 
 > Codename: `meant` (this repo). Product name lives in one constant — see
 > [docs/NAMING.md](./docs/NAMING.md).
 
-Sayable is a browser extension that turns your messy, natural intent into the right words for
+Meant is a browser extension that turns your messy, natural intent into the right words for
 the room — in any text box, without a chat thread and without writing a prompt.
 
-You type what you actually mean (badly, quickly, in your own words), select it, and Sayable
+You type what you actually mean (badly, quickly, in your own words), select it, and Meant
 rewrites it for the audience, tone, format, and length the situation demands: an email to your
 manager, a Slack reply, a Jira user story, a bug report, a customer apology, a PR description,
 a LinkedIn post, or a one-line message to a friend. Same meaning, different register.
@@ -21,7 +21,7 @@ phrase it _here_. Existing tools make it worse: Grammarly tells you what's wrong
 write it), and ChatGPT-style sidebars make you leave the text box, copy the situation out, and
 paste the answer back.
 
-Sayable lives where the text already is, asks only for your intent, and does the register work
+Meant lives where the text already is, asks only for your intent, and does the register work
 for you.
 
 **The whole product is four verbs:** Intent → Invoke → Transform → Accept.
@@ -40,7 +40,7 @@ for you.
 - **BYOK by default, no backend required.** Any provider, any model, your key — Anthropic,
   OpenAI, OpenRouter, Groq, Gemini, a gateway, or a local model via Ollama / LM Studio /
   llama.cpp. An optional hosted tier may come later; it's another provider, never a requirement.
-- **Privacy is architecture.** No Sayable server in the loop, no telemetry by default; page
+- **Privacy is architecture.** No Meant server in the loop, no telemetry by default; page
   context is read only when you ask and is previewed before it's sent.
 
 ## The fast path
@@ -92,7 +92,7 @@ no DOM/`chrome`) · `packages/adapters` (surface adapters) · `packages/config` 
 
 ## Bring your own key
 
-Sayable's config is a subset of `opencode.json`, so a config you already maintain mostly works:
+Meant's config is a subset of `opencode.json`, so a config you already maintain mostly works:
 
 ```jsonc
 {
@@ -112,7 +112,7 @@ never synced in plaintext. Full contract in [docs/PROVIDERS.md](./docs/PROVIDERS
 ## Privacy
 
 - **No backend required.** Today the extension talks only to the provider you configure — there
-  is no Sayable server in the loop. A future hosted tier is opt-in and never replaces this path.
+  is no Meant server in the loop. A future hosted tier is opt-in and never replaces this path.
 - **Local by default.** Inference, Voice, Recipes, and history live on your device.
 - **Context is opt-in and previewed.** Nothing about the page leaves until you press transform.
 - **Local models supported.** Point it at Ollama and nothing leaves your machine at all.

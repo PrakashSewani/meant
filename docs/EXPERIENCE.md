@@ -43,7 +43,7 @@ affordance), and nothing else.
 | Select text                                 | Nothing, by default. With the grip enabled for this site: a small **grip** only — never a popover. |
 | `Alt+J` (remappable, via `chrome.commands`) | Open the Register Bar on the selection.                                                            |
 | Click the grip                              | Same as the shortcut (grip enabled per site first).                                                |
-| Right-click → _Sayable…_                    | Same, in the context menu.                                                                         |
+| Right-click → _Meant…_                      | Same, in the context menu.                                                                         |
 | Focus an empty field + the shortcut         | **Compose mode**: the bar opens with an intent box.                                                |
 
 Why not `⌘J` / `Ctrl+J`: Chrome owns that family (Downloads, the DevTools console) and a page or

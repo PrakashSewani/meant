@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Bar } from '@sayable/ui';
+import { Bar } from '@meant/ui';
 import {
   RECIPES,
   StreamEventSchema,
@@ -10,10 +10,10 @@ import {
   type RegisterHints,
   type TransformEvent,
   type TransformRequest,
-} from '@sayable/core';
+} from '@meant/core';
 import { setBarMount, type BarHostRequest, type BarMount } from './bar-bridge';
 
-const PORT_NAME = 'sayable-transform';
+const PORT_NAME = 'meant-transform';
 const DEFAULT_RECIPE_ID = 'say-it-better';
 const RECIPE_CHOICES = RECIPES.map(({ id, label }) => ({ id, label }));
 export const mountBar: BarMount = ({ shadow, styles, ...request }) => {

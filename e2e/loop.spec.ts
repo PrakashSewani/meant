@@ -9,7 +9,7 @@ const FIXTURE = 'http://localhost:3123/fixture.html';
 let context: BrowserContext;
 
 test.beforeAll(async () => {
-  context = await chromium.launchPersistentContext(mkdtempSync(join(tmpdir(), 'sayable-e2e-')), {
+  context = await chromium.launchPersistentContext(mkdtempSync(join(tmpdir(), 'meant-e2e-')), {
     // The headless shell cannot load extensions; the full Chromium build can.
     channel: 'chromium',
     viewport: { width: 900, height: 700 },
@@ -31,7 +31,7 @@ test('polish, accept, and one native undo puts the original text back', async ()
 
   await invokeBar(context);
 
-  const bar = page.locator('sayable-bar');
+  const bar = page.locator('meant-bar');
   await expect(bar).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
 
   // Keyboard only: the bar takes focus when it opens, so ⏎ accepts the result.
@@ -52,7 +52,7 @@ test('the command path reaches one frame, not every frame', async () => {
   await page.locator('#plain').selectText();
   await invokeBar(context);
 
-  await expect(page.locator('sayable-bar')).toHaveCount(1);
+  await expect(page.locator('meant-bar')).toHaveCount(1);
 });
 
 test('the bar’s stylesheet is where the bar script looks for it', async () => {
@@ -65,6 +65,48 @@ test('the bar’s stylesheet is where the bar script looks for it', async () => 
   });
 
   expect(status).toBe(200);
+});
+
+test('a configured endpoint is called for real, through the same pipeline', async () => {
+  const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
+
+  // What the custom-provider form writes, by hand: an OpenAI-compatible endpoint on this machine.
+  await worker.evaluate(async () => {
+    await chrome.storage.local.set({
+      'meant.config': {
+        model: 'fixture/fixture-model',
+        provider: {
+          fixture: {
+            npm: '@ai-sdk/openai-compatible',
+            name: 'Fixture',
+            options: { baseURL: 'http://localhost:3123/v1' },
+            models: { 'fixture-model': { name: 'fixture-model' } },
+          },
+        },
+      },
+      'meant.secrets': { fixture: 'sk-fixture' },
+    });
+  });
+
+  try {
+    const page = await context.newPage();
+    await page.goto(FIXTURE);
+
+    const field = page.locator('#plain');
+    await field.selectText();
+    await invokeBar(context);
+
+    const bar = page.locator('meant-bar');
+    await expect(bar).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
+    await page.keyboard.press('Enter');
+
+    // Mirrors PROVIDER_REPLY in the fixture server: proof the answer came from the endpoint.
+    await expect(field).toHaveValue('Deploy slipped a day. We are on it, fix by EOD.', {
+      timeout: 10_000,
+    });
+  } finally {
+    await worker.evaluate(() => chrome.storage.local.clear());
+  }
 });
 
 /**

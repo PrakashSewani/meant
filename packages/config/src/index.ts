@@ -3,12 +3,12 @@ export {
   OPENCODE_IGNORED_KEYS,
   ProviderConfigSchema,
   ProviderOptionsSchema,
-  SayableConfigSchema,
+  MeantConfigSchema,
   TierSchema,
   lintConfig,
   validateConfig,
 } from './schema.ts';
-export type { ConfigWarning, SayableConfig, Tier, ValidateResult } from './schema.ts';
+export type { ConfigWarning, MeantConfig, Tier, ValidateResult } from './schema.ts';
 
 export {
   PRESETS,
@@ -20,3 +20,6 @@ export {
   tierRefsFor,
 } from './presets.ts';
 export type { PresetModel, ProviderPreset, TransportId } from './presets.ts';
+
+export { customProviderConfig, isValidProviderId, originPatternFor } from './custom.ts';
+export type { CustomProviderInput } from './custom.ts';

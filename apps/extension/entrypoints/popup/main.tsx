@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import '@/lib/app.css';
 import {
   BRAND,
   PingResponseSchema,
@@ -8,14 +9,14 @@ import {
   readEvents,
   summarizeEvents,
   type EventSummary,
-} from '@sayable/core';
-import { validateConfig, type SayableConfig } from '@sayable/config';
+} from '@meant/core';
+import { validateConfig, type MeantConfig } from '@meant/config';
 
-const CONFIG_KEY = 'sayable.config';
-const SECRETS_KEY = 'sayable.secrets';
-const EVENTS_KEY = 'sayable.events';
+const CONFIG_KEY = 'meant.config';
+const SECRETS_KEY = 'meant.secrets';
+const EVENTS_KEY = 'meant.events';
 const CONTENT_SCRIPT = '/content-scripts/content.js';
-const PING = { type: 'sayable-ping' } as const;
+const PING = { type: 'meant-ping' } as const;
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 interface TabInfo {
@@ -40,7 +41,7 @@ function Popup() {
 
   async function readStatus() {
     const stored = await browser.storage.local.get([CONFIG_KEY, SECRETS_KEY, EVENTS_KEY]);
-    const parsed = validateConfig(stored[CONFIG_KEY] as SayableConfig | undefined);
+    const parsed = validateConfig(stored[CONFIG_KEY] as MeantConfig | undefined);
 
     if (parsed.ok && parsed.config.model) {
       const parts = parseModelRef(parsed.config.model);
