@@ -5,6 +5,7 @@ import { PROVIDER_ORIGINS } from '@sayable/config';
 
 export default defineConfig({
   modules: ['@wxt-dev/module-react'],
+  zip: { name: 'sayable' },
   vite: () => ({
     plugins: [tailwindcss()],
   }),

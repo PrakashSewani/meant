@@ -213,6 +213,15 @@ extension-owned surface. The Provider doctor is gated the same way.
   "manifest_version": 3,
   "permissions": ["storage", "contextMenus", "activeTab", "scripting", "alarms"],
   "optional_permissions": ["sidePanel"],
+  // The curated hosts. Sayable ships support for these, and the grant is also what lets the
+  // worker inject the bar bundle on first invoke — a content-script match does not (D-004).
+  "host_permissions": [
+    "https://mail.google.com/*",
+    "https://app.slack.com/*",
+    "https://*.atlassian.net/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*",
+  ],
   // Nothing provider-related is granted at install. Enabling a preset or a local model requests
   // exactly that origin, once, from a user gesture in the options page (D-004).
   "optional_host_permissions": [
@@ -223,6 +232,7 @@ extension-owned surface. The Provider doctor is gated the same way.
     "https://generativelanguage.googleapis.com/*",
     "http://localhost/*",
     "http://127.0.0.1/*",
+    "https://*/*",
   ],
   "commands": {
     "invoke-register-bar": {
