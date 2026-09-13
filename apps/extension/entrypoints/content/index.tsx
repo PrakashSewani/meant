@@ -5,10 +5,15 @@ import {
   InvokeMessageSchema,
   PingMessageSchema,
   curatedMatchPatterns,
+  learnedRegister,
+  priorKey,
+  readPriors,
   resolveRegister,
 } from '@meant/core';
 import { barMount } from '../../lib/bar-bridge';
 import type { BarAnchor } from '@meant/ui';
+
+const PRIORS_KEY = 'meant.priors';
 
 export default defineContentScript({
   matches: curatedMatchPatterns(),
@@ -69,6 +74,11 @@ async function openBar(adapter: ReturnType<typeof adapterFor>): Promise<void> {
   };
 
   const hints = adapter.inferContext(element);
+  const stored = await browser.storage.local.get(PRIORS_KEY);
+  const learned = learnedRegister(
+    readPriors(stored[PRIORS_KEY]),
+    priorKey(hints.siteId ?? 'page', hints.fieldRole),
+  );
 
   const unmount = await mount({
     shadow,
@@ -76,7 +86,8 @@ async function openBar(adapter: ReturnType<typeof adapterFor>): Promise<void> {
     mode,
     anchor: anchorFor(element.element, selection),
     hints,
-    register: resolveRegister({ hints }),
+    register: { ...resolveRegister({ hints }), ...learned.register },
+    learned: learned.learned,
     intentText,
     onState: (state) => {
       host.dataset.state = state;

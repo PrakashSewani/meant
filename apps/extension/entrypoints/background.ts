@@ -10,6 +10,7 @@ import {
   classifyError,
   compilePrompt,
   createMockTransport,
+  derivePriors,
   errorCopy,
   getRecipe,
   planDoctorChecks,
@@ -33,6 +34,7 @@ const PORT_NAME = 'meant-transform';
 const CONFIG_KEY = 'meant.config';
 const SECRETS_KEY = 'meant.secrets';
 const EVENTS_KEY = 'meant.events';
+const PRIORS_KEY = 'meant.priors';
 const CONTEXT_MENU_ID = 'meant-invoke';
 const CONTENT_SCRIPT_PATH = '/content-scripts/content.js';
 
@@ -270,7 +272,12 @@ async function recordEvent(event: TransformEvent): Promise<void> {
   const stored = await browser.storage.local.get(EVENTS_KEY);
   const events = appendEvent(readEvents(stored[EVENTS_KEY]), event);
 
-  await browser.storage.local.set({ [EVENTS_KEY]: events });
+  // Recomputed from the whole log rather than merged into the old priors: there is one source of
+  // truth, and no way for the two to drift.
+  await browser.storage.local.set({
+    [EVENTS_KEY]: events,
+    [PRIORS_KEY]: derivePriors(events),
+  });
 }
 
 async function configuredModel(effort: Effort): Promise<ResolvedModel | undefined> {

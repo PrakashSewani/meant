@@ -139,12 +139,15 @@ test('editing a chip reaches the model, not just the pill', async () => {
   await expect(bar).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
   await page.keyboard.press('Enter');
 
-  const events = await worker.evaluate(async () => {
-    const stored = await chrome.storage.local.get('meant.events');
-    return stored['meant.events'] as { sent: { tone?: string[] } }[];
-  });
+  const readEvents = () =>
+    worker.evaluate(async () => {
+      const stored = await chrome.storage.local.get('meant.events');
+      return (stored['meant.events'] ?? []) as { sent: { tone?: string[] } }[];
+    });
 
-  expect(events.at(-1)?.sent.tone).toEqual(['direct', 'warm']);
+  // The worker writes the event after the accept, so give it a moment rather than racing it.
+  await expect.poll(async () => (await readEvents()).length).toBeGreaterThan(0);
+  expect((await readEvents()).at(-1)?.sent.tone).toEqual(['direct', 'warm']);
 });
 
 test('compose mode writes into an empty field', async () => {

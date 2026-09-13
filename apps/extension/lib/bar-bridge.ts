@@ -10,6 +10,8 @@ export interface BarHostRequest {
   anchor: BarAnchor;
   hints: RegisterHints;
   register: Register;
+  /** Chips that came from what the user keeps correcting here. */
+  learned: readonly string[];
   intentText: string;
   onState: (state: BarState) => void;
   onAccept: (text: string) => void;

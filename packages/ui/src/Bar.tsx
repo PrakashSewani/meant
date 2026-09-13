@@ -56,6 +56,8 @@ export interface BarProps {
   /** What went in, so the result can be shown as the change it is. */
   original?: string;
   refinements?: readonly string[];
+  /** Chips whose value came from what the user keeps correcting here. */
+  learned?: readonly string[];
   onRefine?: (id: string) => void;
   onRetry?: () => void;
   errorMessage?: string;
@@ -81,6 +83,7 @@ export function Bar({
   result,
   original,
   refinements,
+  learned,
   onRefine,
   onRetry,
   errorMessage,
@@ -259,7 +262,7 @@ export function Bar({
       ) : null}
 
       <div className="flex flex-wrap items-center gap-1.5 px-3 py-2.5">
-        <Chip label="Who" value={register.who} fallback="nobody">
+        <Chip label="Who" value={register.who} fallback="nobody" learned={learned?.includes('who')}>
           <TextEditor
             value={register.who ?? ''}
             placeholder="who is reading this"
@@ -267,7 +270,12 @@ export function Bar({
           />
         </Chip>
 
-        <Chip label="Tone" value={formatTones(register.tone)} fallback="unspecified">
+        <Chip
+          label="Tone"
+          value={formatTones(register.tone)}
+          fallback="unspecified"
+          learned={learned?.includes('tone')}
+        >
           <TextEditor
             value={formatTones(register.tone)}
             placeholder="direct, warm"
@@ -276,7 +284,12 @@ export function Bar({
           />
         </Chip>
 
-        <Chip label="As" value={register.format} fallback="text">
+        <Chip
+          label="As"
+          value={register.format}
+          fallback="text"
+          learned={learned?.includes('format')}
+        >
           <TextEditor
             value={register.format ?? ''}
             placeholder="a reply, a post, a ticket"
@@ -424,11 +437,13 @@ function Chip({
   label,
   value,
   fallback,
+  learned,
   children,
 }: {
   label: string;
   value?: string;
   fallback: string;
+  learned?: boolean;
   children: ReactNode;
 }) {
   const [editing, setEditing] = useState(false);
@@ -471,6 +486,13 @@ function Chip({
       }`}
     >
       <span className="text-[11px] text-neutral-400">{label}</span>
+      {learned ? (
+        <span
+          aria-label="learned here"
+          title="Learned from corrections you keep making here"
+          className="h-1.5 w-1.5 shrink-0 rounded-full bg-neutral-500"
+        />
+      ) : null}
       <span className="max-w-[11rem] truncate">{value ?? fallback}</span>
     </button>
   );

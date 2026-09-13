@@ -17,7 +17,8 @@ const INK = '#18181b';
 const PAPER = '#fafafa';
 const AMBER = '#f59e0b';
 
-const tile = (inner) => `<rect x="4" y="4" width="120" height="120" rx="30" fill="${INK}" />${inner}`;
+const tile = (inner) =>
+  `<rect x="4" y="4" width="120" height="120" rx="30" fill="${INK}" />${inner}`;
 const sparkle = (cx, cy, r) =>
   `<path d="M${cx} ${cy - r} Q ${cx + r * 0.14} ${cy - r * 0.14} ${cx + r} ${cy} Q ${cx + r * 0.14} ${cy + r * 0.14} ${cx} ${cy + r} Q ${cx - r * 0.14} ${cy + r * 0.14} ${cx - r} ${cy} Q ${cx - r * 0.14} ${cy - r * 0.14} ${cx} ${cy - r} Z" fill="${AMBER}" />`;
 
@@ -246,10 +247,15 @@ const html = `<!doctype html><html><head><meta charset="utf-8" /><style>
 const browser = await chromium.launch();
 
 try {
-  const page = await browser.newPage({ viewport: { width: 890, height: 1000 }, deviceScaleFactor: 2 });
+  const page = await browser.newPage({
+    viewport: { width: 890, height: 1000 },
+    deviceScaleFactor: 2,
+  });
   await page.setContent(html);
   await page.screenshot({ path: sheetPath, fullPage: true });
-  console.log(`${concepts.length} concepts → assets/logo-concepts/, sheet → test-results/logo-sheet.png`);
+  console.log(
+    `${concepts.length} concepts → assets/logo-concepts/, sheet → test-results/logo-sheet.png`,
+  );
 } finally {
   await browser.close();
 }

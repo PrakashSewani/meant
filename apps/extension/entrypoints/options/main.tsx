@@ -1,8 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Mark } from '@meant/ui';
 import '@/lib/app.css';
-import { DoctorReportSchema, type DoctorReport } from '@meant/core';
+import {
+  DoctorReportSchema,
+  readPriors,
+  withoutPrior,
+  type ChipKey,
+  type DoctorReport,
+  type Priors,
+} from '@meant/core';
 import {
   PRESETS,
   customProviderConfig,
@@ -15,6 +22,7 @@ import {
 
 const CONFIG_KEY = 'meant.config';
 const SECRETS_KEY = 'meant.secrets';
+const PRIORS_KEY = 'meant.priors';
 
 interface CustomDraft {
   id: string;
@@ -53,6 +61,19 @@ function Options() {
   const [status, setStatus] = useState<string>();
   const [testing, setTesting] = useState(false);
   const [report, setReport] = useState<DoctorReport>();
+  const [priors, setPriors] = useState<Priors>({});
+
+  useEffect(() => {
+    void browser.storage.local
+      .get(PRIORS_KEY)
+      .then((stored) => setPriors(readPriors(stored[PRIORS_KEY])));
+  }, []);
+
+  async function forget(key: string, chip: ChipKey) {
+    const next = withoutPrior(priors, key, chip);
+    setPriors(next);
+    await browser.storage.local.set({ [PRIORS_KEY]: next });
+  }
 
   const preset = selected === 'custom' ? undefined : presetFor(selected);
   const problem = selected === 'custom' ? customProblem(custom) : undefined;
@@ -281,6 +302,42 @@ function Options() {
         >
           {testing ? 'Testing…' : 'Test connection'}
         </button>
+
+        {Object.keys(priors).length > 0 ? (
+          <section className="mt-6 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+            <h2 className="text-xs font-medium tracking-wide text-neutral-500 uppercase">
+              What it has learned
+            </h2>
+            <p className="mt-1 text-xs text-neutral-500">
+              Corrections you keep making in the same place, applied next time. Stored on this
+              device, and forgettable one chip at a time.
+            </p>
+            <ul className="mt-3 space-y-1">
+              {Object.entries(priors).flatMap(([key, chips]) =>
+                Object.entries(chips).map(([chip, prior]) => (
+                  <li
+                    key={`${key}:${chip}`}
+                    className="flex items-center justify-between gap-3 text-xs"
+                  >
+                    <span className="text-neutral-500">
+                      {key} · {chip}
+                    </span>
+                    <span className="flex-1 truncate font-mono">
+                      {Array.isArray(prior.value) ? prior.value.join(', ') : prior.value}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => void forget(key, chip as ChipKey)}
+                      className="text-neutral-500 underline"
+                    >
+                      Forget
+                    </button>
+                  </li>
+                )),
+              )}
+            </ul>
+          </section>
+        ) : null}
 
         {status ? <p className="mt-3 text-xs text-neutral-600">{status}</p> : null}
 

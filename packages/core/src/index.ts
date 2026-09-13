@@ -3,6 +3,7 @@ export * from './brand';
 export * from './diff';
 export * from './events';
 export * from './inference';
+export * from './priors';
 export * from './prompt/compile';
 export * from './prompt/sections';
 export * from './providers/doctor';

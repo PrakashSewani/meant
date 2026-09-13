@@ -35,9 +35,7 @@ function comma(cx, cy, r, fill, { mirrored = false } = {}) {
              C ${cx - r * 0.8} ${cy + r * 2.2} ${cx + r * 0.5} ${cy + r * 1.55} ${cx + r * 0.95} ${cy + r * 0.8} Z"
           fill="${fill}" />`;
 
-  return mirrored
-    ? `<g transform="translate(${cx * 2} 0) scale(-1 1)">${mark}</g>`
-    : mark;
+  return mirrored ? `<g transform="translate(${cx * 2} 0) scale(-1 1)">${mark}</g>` : mark;
 }
 
 const pair = (fillA, fillB, r = 16) =>
@@ -52,9 +50,7 @@ const concepts = [
   {
     slug: 'q2-closing-sparkle',
     label: 'Closing quote + sparkle',
-    mark: `${tile(
-      comma(48, 50, 16, PAPER) + comma(82, 50, 16, PAPER),
-    )}${sparkle(105, 33, 10)}`,
+    mark: `${tile(comma(48, 50, 16, PAPER) + comma(82, 50, 16, PAPER))}${sparkle(105, 33, 10)}`,
   },
   {
     slug: 'q3-over-line',
@@ -116,10 +112,15 @@ const html = `<!doctype html><html><head><meta charset="utf-8" /><style>
 const browser = await chromium.launch();
 
 try {
-  const page = await browser.newPage({ viewport: { width: 620, height: 520 }, deviceScaleFactor: 2 });
+  const page = await browser.newPage({
+    viewport: { width: 620, height: 520 },
+    deviceScaleFactor: 2,
+  });
   await page.setContent(html);
   await page.screenshot({ path: sheetPath, fullPage: true });
-  console.log(`${concepts.length} variants → assets/logo-concepts/, sheet → test-results/logo-quotes.png`);
+  console.log(
+    `${concepts.length} variants → assets/logo-concepts/, sheet → test-results/logo-quotes.png`,
+  );
 } finally {
   await browser.close();
 }

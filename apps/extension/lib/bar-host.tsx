@@ -44,6 +44,7 @@ function BarHost({
   hints,
   register: inferred,
   intentText,
+  learned,
   mode,
   anchor,
   onState,
@@ -164,6 +165,7 @@ function BarHost({
       result={result || undefined}
       original={original}
       refinements={refinements}
+      learned={learned}
       onRefine={(id) => {
         // A refinement re-runs on the result itself, so the chips compound through the text.
         transform({ intent: result, refinements: [id] });
