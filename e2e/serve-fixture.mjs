@@ -33,6 +33,8 @@ createServer(async (request, response) => {
   // A stand-in OpenAI-compatible endpoint: the extension talks to it exactly as it would to a
   // real provider, which is the only way to exercise the transport end to end.
   if (request.method === 'POST' && url.pathname.endsWith('/chat/completions')) {
+    // Thinking takes time; without the pause nothing ever shows the working state.
+    await new Promise((resolve) => setTimeout(resolve, 600));
     response.writeHead(200, { 'content-type': 'text/event-stream' });
     response.end(
       PIECES.map((piece, index) =>

@@ -27,6 +27,24 @@ test('look at the bar', async () => {
     const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
     const extensionId = new URL(worker.url()).host;
 
+    // Point at the slow local endpoint, so the working state is real rather than a frame.
+    await worker.evaluate(async () => {
+      await chrome.storage.local.set({
+        'meant.config': {
+          model: 'fixture/fixture-model',
+          provider: {
+            fixture: {
+              npm: '@ai-sdk/openai-compatible',
+              name: 'Fixture',
+              options: { baseURL: 'http://localhost:3123/v1' },
+              models: { 'fixture-model': { name: 'fixture-model' } },
+            },
+          },
+        },
+        'meant.secrets': { fixture: 'sk-fixture' },
+      });
+    });
+
     const page = await context.newPage();
     await page.goto(FIXTURE);
 
@@ -46,15 +64,11 @@ test('look at the bar', async () => {
 
     await page.screenshot({ path: join(SHOTS, '1-collapsed.png') });
 
-    // Tab reaches the recipe picker, then the disclosure; Space opens it.
-    await page.keyboard.press('Tab');
-    await page.keyboard.press('Tab');
-    await page.keyboard.press('Space');
-    await page.screenshot({ path: join(SHOTS, '2-expanded.png') });
-
-    // Next stop is the primary action. Nothing is called until it is pressed.
-    await page.keyboard.press('Tab');
+    // Options are visible by default now; nothing is called until the primary action is pressed.
     await page.keyboard.press('Enter');
+    await expect(bar).toHaveAttribute('data-state', 'streaming');
+    await page.screenshot({ path: join(SHOTS, '2-working.png') });
+
     await expect(bar).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
     await page.screenshot({ path: join(SHOTS, '3-result.png') });
 
