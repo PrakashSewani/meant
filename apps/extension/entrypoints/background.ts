@@ -2,12 +2,15 @@ import type { Browser } from 'wxt/browser';
 import {
   DoctorRequestSchema,
   PortRequestSchema,
+  RecordEventMessageSchema,
+  appendEvent,
   classifyError,
   compilePrompt,
   createMockTransport,
   errorCopy,
   getRecipe,
   planDoctorChecks,
+  readEvents,
   resolveModel,
   resolveRegister,
   runDoctorReport,
@@ -16,6 +19,7 @@ import {
   type Effort,
   type ResolvedModel,
   type StreamEvent,
+  type TransformEvent,
 } from '@sayable/core';
 import { selectTransport } from '@sayable/core/transports';
 import { validateConfig, type SayableConfig } from '@sayable/config';
@@ -23,6 +27,7 @@ import { validateConfig, type SayableConfig } from '@sayable/config';
 const PORT_NAME = 'sayable-transform';
 const CONFIG_KEY = 'sayable.config';
 const SECRETS_KEY = 'sayable.secrets';
+const EVENTS_KEY = 'sayable.events';
 
 const MOCK_MODEL: ResolvedModel = {
   providerId: 'mock',
@@ -42,10 +47,15 @@ export default defineBackground(() => {
   });
 
   browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
-    if (!DoctorRequestSchema.safeParse(message).success) return undefined;
+    if (DoctorRequestSchema.safeParse(message).success) {
+      void runDoctorHere().then(sendResponse);
+      return true;
+    }
 
-    void runDoctorHere().then(sendResponse);
-    return true;
+    const recorded = RecordEventMessageSchema.safeParse(message);
+    if (recorded.success) void recordEvent(recorded.data.event);
+
+    return undefined;
   });
 
   browser.runtime.onConnect.addListener((port) => {
@@ -110,6 +120,13 @@ async function runDoctorHere(): Promise<DoctorReport> {
 
 function post(port: Browser.runtime.Port, event: StreamEvent): void {
   port.postMessage(event);
+}
+
+async function recordEvent(event: TransformEvent): Promise<void> {
+  const stored = await browser.storage.local.get(EVENTS_KEY);
+  const events = appendEvent(readEvents(stored[EVENTS_KEY]), event);
+
+  await browser.storage.local.set({ [EVENTS_KEY]: events });
 }
 
 async function configuredModel(effort: Effort): Promise<ResolvedModel | undefined> {

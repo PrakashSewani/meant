@@ -7,11 +7,13 @@ import {
   InvokeMessageSchema,
   PingMessageSchema,
   StreamEventSchema,
+  correctionsBetween,
   curatedMatchPatterns,
   resolveRegister,
   type Effort,
   type Register,
   type RegisterHints,
+  type TransformEvent,
   type TransformRequest,
 } from '@sayable/core';
 import { createShadowRootUi } from 'wxt/utils/content-script-ui/shadow-root';
@@ -159,6 +161,25 @@ function BarHost({ hints, register: inferred, intentText, onAccept, onDismiss }:
     setAttempt((current) => current + 1);
   }
 
+  function record(accepted: boolean) {
+    if (!accepted && result.length === 0) return;
+
+    const event: TransformEvent = {
+      at: Date.now(),
+      surface: hints.siteId ?? 'page',
+      effort,
+      inferred,
+      sent: register,
+      accepted,
+      corrections: correctionsBetween(inferred, register),
+    };
+
+    if (hints.fieldRole) event.fieldRole = hints.fieldRole;
+    event.recipeId = RECIPE_ID;
+
+    void browser.runtime.sendMessage({ type: 'event', event }).catch(() => undefined);
+  }
+
   return (
     <Bar
       inferredLine={inferredLine(hints, register)}
@@ -174,8 +195,15 @@ function BarHost({ hints, register: inferred, intentText, onAccept, onDismiss }:
         setEffort(value);
         rerun();
       }}
-      onAccept={() => onAccept(result)}
-      onDismiss={onDismiss}
+      onAccept={() => {
+        onAccept(result);
+        record(true);
+      }}
+      onDismiss={() => {
+        // Dismissing before anything was shown is not a rejection of anything.
+        record(false);
+        onDismiss();
+      }}
     />
   );
 }

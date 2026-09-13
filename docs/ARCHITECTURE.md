@@ -154,16 +154,17 @@ interface ResolvedModel {
 
 ## 5. Storage
 
-| Key                      | Contents                                                   | Notes                                                                                                           |
-| ------------------------ | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `sayable.config`         | Provider config (OpenCode subset)                          | No secrets.                                                                                                     |
-| `sayable.secrets`        | API keys                                                   | Encrypted with AES-GCM + PBKDF2 if a passphrase is set; otherwise OS-protected extension storage. Never synced. |
-| `sayable.voice`          | Learned Voice profile                                      | Local only, never sent except inside a prompt.                                                                  |
-| `sayable.recipes`        | User recipes                                               | Local; importable/exportable as JSON.                                                                           |
-| `sayable.sites`          | Per-site opt-ins (grip, context sharing)                   | User-controlled, revocable.                                                                                     |
-| `sayable.priors`         | Register memory: chip corrections per surface + field role | Local, capped, wipeable, never synced. Applied priors are visible in the chip and resettable.                   |
-| `sayable.history`        | Last N transforms (opt-in, default off)                    | Local, capped, wipeable.                                                                                        |
-| `chrome.storage.session` | Unlocked vault keys                                        | Memory-only, cleared on browser restart, never visible to content scripts.                                      |
+| Key                      | Contents                                                      | Notes                                                                                                           |
+| ------------------------ | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `sayable.config`         | Provider config (OpenCode subset)                             | No secrets.                                                                                                     |
+| `sayable.secrets`        | API keys                                                      | Encrypted with AES-GCM + PBKDF2 if a passphrase is set; otherwise OS-protected extension storage. Never synced. |
+| `sayable.voice`          | Learned Voice profile                                         | Local only, never sent except inside a prompt.                                                                  |
+| `sayable.recipes`        | User recipes                                                  | Local; importable/exportable as JSON.                                                                           |
+| `sayable.sites`          | Per-site opt-ins (grip, context sharing)                      | User-controlled, revocable.                                                                                     |
+| `sayable.priors`         | Register memory: chip corrections per surface + field role    | Local, capped, wipeable, never synced. Applied priors are visible in the chip and resettable.                   |
+| `sayable.history`        | Last N transforms (opt-in, default off)                       | Local, capped, wipeable.                                                                                        |
+| `sayable.events`         | Transform metadata: register sent, corrections, accepted flag | Local, capped at 200, wipeable from the popup. **No text content, ever.**                                       |
+| `chrome.storage.session` | Unlocked vault keys                                           | Memory-only, cleared on browser restart, never visible to content scripts.                                      |
 
 `chrome.storage.sync` is used **only** for non-sensitive prefs (theme, shortcut). Secrets and
 Voice never sync in plaintext. If a future accounts tier ships, cross-device sync must be

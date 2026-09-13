@@ -31,7 +31,9 @@ The whole product, at minimum, on the most generic surface.
   off by default. A browser-owned shortcut can never be the default.
 - **Measured:** the inference golden corpus lands _with_ the register engine, not after it —
   "register is mostly inferable" has to be a number before it's a bet.
-- **Privacy:** no history, no context capture, keys in local storage only.
+- **Privacy:** no transform history, no context capture, keys in local storage only, and a local
+  event log that records register metadata — never text — so accept rate is a number rather than a
+  feeling.
 - **Deliberately absent:** voice memory, register memory, compose mode, site adapters, recipe
   library, sync.
 

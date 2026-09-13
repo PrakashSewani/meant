@@ -1,12 +1,22 @@
 import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BRAND, PingResponseSchema, isCuratedHost, parseModelRef } from '@sayable/core';
+import {
+  BRAND,
+  PingResponseSchema,
+  isCuratedHost,
+  parseModelRef,
+  readEvents,
+  summarizeEvents,
+  type EventSummary,
+} from '@sayable/core';
 import { validateConfig, type SayableConfig } from '@sayable/config';
 
 const CONFIG_KEY = 'sayable.config';
 const SECRETS_KEY = 'sayable.secrets';
+const EVENTS_KEY = 'sayable.events';
 const CONTENT_SCRIPT = '/content-scripts/content.js';
 const PING = { type: 'sayable-ping' } as const;
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 interface TabInfo {
   id?: number;
@@ -22,13 +32,14 @@ function Popup() {
   const [here, setHere] = useState(false);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string>();
+  const [summary, setSummary] = useState<EventSummary>();
 
   useEffect(() => {
     void readStatus();
   }, []);
 
   async function readStatus() {
-    const stored = await browser.storage.local.get([CONFIG_KEY, SECRETS_KEY]);
+    const stored = await browser.storage.local.get([CONFIG_KEY, SECRETS_KEY, EVENTS_KEY]);
     const parsed = validateConfig(stored[CONFIG_KEY] as SayableConfig | undefined);
 
     if (parsed.ok && parsed.config.model) {
@@ -39,6 +50,8 @@ function Popup() {
     const secrets = stored[SECRETS_KEY];
     setHasKey(typeof secrets === 'object' && secrets !== null && Object.keys(secrets).length > 0);
 
+    setSummary(summarizeEvents(readEvents(stored[EVENTS_KEY]), Date.now() - WEEK_MS));
+
     const commands = await browser.commands.getAll();
     const invoke = commands.find((command) => command.name === 'invoke-register-bar');
     setShortcut(invoke?.shortcut || 'unassigned');
@@ -47,6 +60,11 @@ function Popup() {
     const info = describeTab(current);
     setTab(info);
     setHere(await isPresent(info?.id));
+  }
+
+  async function clearEvents() {
+    await browser.storage.local.remove(EVENTS_KEY);
+    setSummary(undefined);
   }
 
   async function enableHere() {
@@ -153,6 +171,30 @@ function Popup() {
 
         {note ? <p className="mt-2 text-xs text-neutral-600">{note}</p> : null}
       </section>
+
+      {summary && summary.shown > 0 ? (
+        <section className="mt-4 border-t border-neutral-100 pt-3">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs text-neutral-500">Accepted this week</span>
+            <span className="text-xs">
+              {summary.accepted} of {summary.shown}
+              {summary.acceptRate !== undefined
+                ? ` · ${Math.round(summary.acceptRate * 100)}%`
+                : ''}
+            </span>
+          </div>
+          <div className="mt-1 flex items-center justify-between gap-2">
+            <span className="text-xs text-neutral-400">On this device, never sent.</span>
+            <button
+              type="button"
+              onClick={() => void clearEvents()}
+              className="text-xs text-neutral-500 underline"
+            >
+              Clear
+            </button>
+          </div>
+        </section>
+      ) : null}
 
       <button
         type="button"
