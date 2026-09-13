@@ -7,20 +7,20 @@ export function Mark({ size = 18, className }: { size?: number; className?: stri
   return (
     <svg
       width={size}
-      height={size * (47 / 76)}
-      viewBox="27 41 76 47"
+      height={size * (52 / 60)}
+      viewBox="37 41 60 52"
       role="img"
       aria-label="Meant"
       className={className}
     >
-      <g fill="currentColor">
-        <circle cx="50" cy="58" r="15" />
-        <path d="M46.25 69.25 C 39 75 32.5 80 29.75 84.25 C 38 82 49 77.5 58.25 70.75 Z" />
-      </g>
-      <g fill="#f59e0b">
-        <circle cx="85" cy="58" r="15" />
-        <path d="M81.25 69.25 C 74 75 67.5 80 64.75 84.25 C 73 82 84 77.5 93.25 70.75 Z" />
-      </g>
+      <path
+        d="M40 80 C 40 62, 48 50, 62 44 L 66 54 C 57 58, 53 65, 52 72 L 62 72 L 62 92 L 40 80 Z"
+        fill="currentColor"
+      />
+      <path
+        d="M70 80 C 70 62, 78 50, 92 44 L 96 54 C 87 58, 83 65, 82 72 L 92 72 L 92 92 L 70 80 Z"
+        fill="#f59e0b"
+      />
     </svg>
   );
 }

@@ -1,23 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Meant">
   <rect x="4" y="4" width="120" height="120" rx="30" fill="#18181b" />
-
-  <!-- Two voices, one mark: the plain quote and, in the brand's amber, the register it becomes.
-       A bowl with a narrow tail at roughly 45° — long sweeping tails collide, short ones read as
-       teardrops. -->
-  <g fill="#fafafa">
-    <circle cx="50" cy="58" r="15" />
-    <path
-      d="M46.25 69.25
-         C 39 75 32.5 80 29.75 84.25
-         C 38 82 49 77.5 58.25 70.75 Z"
-    />
-  </g>
-  <g fill="#f59e0b">
-    <circle cx="85" cy="58" r="15" />
-    <path
-      d="M81.25 69.25
-         C 74 75 67.5 80 64.75 84.25
-         C 73 82 84 77.5 93.25 70.75 Z"
-    />
-  </g>
+  <!-- Two voices: the plain quote, and in the brand's amber the register it becomes. -->
+  <path
+    d="M40 80 C 40 62, 48 50, 62 44 L 66 54 C 57 58, 53 65, 52 72 L 62 72 L 62 92 L 40 80 Z"
+    fill="#fafafa"
+  />
+  <path
+    d="M70 80 C 70 62, 78 50, 92 44 L 96 54 C 87 58, 83 65, 82 72 L 92 72 L 92 92 L 70 80 Z"
+    fill="#f59e0b"
+  />
 </svg>
