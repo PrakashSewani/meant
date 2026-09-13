@@ -1,4 +1,4 @@
-import { adapterFor, type Editable } from '@meant/adapters';
+import { adapterFor, type Editable, type SelectionInfo } from '@meant/adapters';
 import {
   BAR_TAG,
   BarStylesResponseSchema,
@@ -8,6 +8,7 @@ import {
   resolveRegister,
 } from '@meant/core';
 import { barMount } from '../../lib/bar-bridge';
+import type { BarAnchor } from '@meant/ui';
 
 export default defineContentScript({
   matches: curatedMatchPatterns(),
@@ -73,6 +74,7 @@ async function openBar(adapter: ReturnType<typeof adapterFor>): Promise<void> {
   const unmount = await mount({
     shadow,
     styles,
+    anchor: anchorFor(element.element, selection),
     hints,
     register: resolveRegister({ hints }),
     intentText,
@@ -148,6 +150,21 @@ function showNotice(message: string): void {
   shadow.append(box);
   document.documentElement.append(host);
   setTimeout(() => host.remove(), 4000);
+}
+
+/** Where to put the bar: next to the text the user is looking at, in viewport coordinates. */
+function anchorFor(element: HTMLElement, selection: SelectionInfo | null): BarAnchor {
+  const range = selection?.range;
+
+  if (range) {
+    const rect = range.getBoundingClientRect();
+    if (rect.width > 0 || rect.height > 0) {
+      return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom };
+    }
+  }
+
+  const rect = element.getBoundingClientRect();
+  return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom };
 }
 
 function activeEditable(adapter: ReturnType<typeof adapterFor>): Editable | null {

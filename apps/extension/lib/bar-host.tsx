@@ -39,6 +39,7 @@ function BarHost({
   hints,
   register: inferred,
   intentText,
+  anchor,
   onState,
   onAccept,
   onDismiss,
@@ -114,6 +115,7 @@ function BarHost({
       inferredLine={inferredLine(hints, register)}
       register={register}
       effort={effort}
+      anchor={anchor}
       recipes={RECIPE_CHOICES}
       recipeId={recipeId}
       result={result || undefined}

@@ -1,10 +1,12 @@
 import type { Register, RegisterHints } from '@meant/core';
+import type { BarAnchor } from '@meant/ui';
 
 export type BarState = 'streaming' | 'ready' | 'error';
 
 export interface BarHostRequest {
   shadow: ShadowRoot;
   styles: string;
+  anchor: BarAnchor;
   hints: RegisterHints;
   register: Register;
   intentText: string;

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Effort, Length, Register } from '@meant/core';
 import {
   FORMAT_SUGGESTIONS,
@@ -11,6 +11,14 @@ import {
 const EFFORTS: readonly Effort[] = ['quick', 'balanced', 'deep'];
 const LENGTHS: readonly Length[] = ['short', 'medium', 'long'];
 
+/** Where the bar should appear: the selection's box, in viewport coordinates. */
+export interface BarAnchor {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
+
 export interface RecipeChoice {
   id: string;
   label: string;
@@ -22,6 +30,7 @@ export interface BarProps {
   effort: Effort;
   recipes: readonly RecipeChoice[];
   recipeId: string;
+  anchor: BarAnchor;
   result?: string;
   errorMessage?: string;
   onRegisterChange?: (register: Register) => void;
@@ -37,6 +46,7 @@ export function Bar({
   effort,
   recipes,
   recipeId,
+  anchor,
   result,
   errorMessage,
   onRegisterChange,
@@ -46,17 +56,48 @@ export function Bar({
   onDismiss,
 }: BarProps) {
   const [expanded, setExpanded] = useState(false);
+  const [placement, setPlacement] = useState<{ left: number; top: number }>();
   const dialog = useRef<HTMLDivElement>(null);
+  const tookFocus = useRef(false);
 
   function change(patch: Partial<Register>) {
     onRegisterChange?.({ ...register, ...patch });
   }
 
-  useEffect(() => {
-    // Take focus once the bar is actually on screen, so the keyboard loop starts here rather than
-    // in the page underneath.
-    dialog.current?.focus();
-  }, []);
+  // Placed under the selection, flipped above it when there is no room, clamped to the viewport.
+  // It measures itself, so expanding or streaming more text keeps it in view.
+  useLayoutEffect(() => {
+    const element = dialog.current;
+    if (!element) return;
+
+    const measure = () => {
+      const box = element.getBoundingClientRect();
+      const margin = 8;
+      const below = anchor.bottom + margin;
+      const above = anchor.top - box.height - margin;
+      const fitsBelow = below + box.height + margin <= window.innerHeight;
+
+      setPlacement({
+        left: Math.min(
+          Math.max(margin, anchor.left),
+          Math.max(margin, window.innerWidth - box.width - margin),
+        ),
+        top: fitsBelow ? below : Math.max(margin, above),
+      });
+    };
+
+    measure();
+    window.addEventListener('resize', measure);
+
+    // Focus belongs here rather than in a passive effect: it has to happen before the first paint,
+    // while the element is definitely on screen and focusable.
+    if (!tookFocus.current) {
+      tookFocus.current = true;
+      element.focus();
+    }
+
+    return () => window.removeEventListener('resize', measure);
+  }, [anchor, expanded, result, errorMessage]);
 
   useEffect(() => {
     // Listening on the shadow root rather than the document is what keeps the page's own keys out:
@@ -65,8 +106,30 @@ export function Bar({
     if (!(root instanceof ShadowRoot)) return;
 
     function onKeyDown(event: Event) {
-      const { key } = event as KeyboardEvent;
-      if (key === 'Enter' && result) {
+      const { key, shiftKey } = event as KeyboardEvent;
+      const dialogElement = dialog.current;
+      if (!dialogElement) return;
+
+      // Focus starts on the dialog itself, which is not in the sequential order, so the first Tab
+      // has to be handed to the first control deliberately — otherwise it walks the page instead.
+      if (key === 'Tab' && !shiftKey && event.target === dialogElement) {
+        const first = dialogElement.querySelector<HTMLElement>(
+          'select, button:not([disabled]), input, [tabindex]:not([tabindex="-1"])',
+        );
+
+        if (first) {
+          event.preventDefault();
+          first.focus();
+          return;
+        }
+      }
+
+      // ⏎ is the primary action, but never at the expense of a control that needs it: an open
+      // select menu, or a chip input mid-edit.
+      const target = event.target as HTMLElement | null;
+      const typing = target?.matches('select, input, textarea') ?? false;
+
+      if (key === 'Enter' && result && !typing) {
         event.preventDefault();
         onAccept?.();
       }
@@ -87,9 +150,10 @@ export function Bar({
       role="dialog"
       aria-label="Meant"
       tabIndex={-1}
-      className="meant-bar pointer-events-auto fixed right-6 bottom-6 z-[2147483647] w-[26rem] rounded-xl border border-neutral-200 bg-white font-sans text-sm text-neutral-900 shadow-xl"
+      style={{ left: placement?.left, top: placement?.top }}
+      className="meant-bar fixed z-[2147483647] w-max min-w-[19rem] max-w-[26rem] rounded-xl border border-neutral-200 bg-white font-sans text-[13px] text-neutral-900 shadow-xl ring-1 ring-black/5 outline-none"
     >
-      <div className="flex items-center gap-2 px-3 py-2">
+      <div className="flex items-center gap-2 rounded-t-xl border-b border-neutral-200 bg-neutral-50 px-3 py-2">
         <span aria-hidden className="text-neutral-400">
           ✦
         </span>
@@ -131,7 +195,7 @@ export function Bar({
       </div>
 
       {expanded ? (
-        <div className="grid grid-cols-2 gap-2 border-t border-neutral-100 px-3 py-2">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2 px-3 py-2">
           <ChipInput
             label="Who"
             value={register.who ?? ''}
@@ -191,14 +255,16 @@ export function Bar({
       ) : null}
 
       {result ? (
-        <p className="border-t border-neutral-100 px-3 py-2 whitespace-pre-wrap">{result}</p>
+        <p className="max-h-56 overflow-auto border-t border-neutral-100 px-3 py-2 whitespace-pre-wrap">
+          {result}
+        </p>
       ) : null}
 
       {errorMessage ? (
         <p className="border-t border-neutral-100 px-3 py-2 text-red-700">{errorMessage}</p>
       ) : null}
 
-      <p className="border-t border-neutral-100 px-3 py-2 text-xs text-neutral-500">
+      <p className="rounded-b-xl border-t border-neutral-100 bg-neutral-50 px-3 py-2 text-xs text-neutral-500">
         {inferredLine}
       </p>
     </div>
@@ -230,7 +296,7 @@ function ChipInput({ label, value, placeholder, list, onCommit }: ChipInputProps
 
   return (
     <label className="flex items-center gap-2">
-      <span className="text-xs text-neutral-500">{label}</span>
+      <span className="w-12 shrink-0 text-xs text-neutral-500">{label}</span>
       <input
         value={draft}
         list={listId}
@@ -241,7 +307,7 @@ function ChipInput({ label, value, placeholder, list, onCommit }: ChipInputProps
           if (event.key === 'Enter') commit();
           if (event.key === 'Escape') setDraft(value);
         }}
-        className="w-full rounded-md border border-neutral-200 px-2 py-1 text-xs"
+        className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs"
       />
       {listId ? (
         <datalist id={listId}>
