@@ -262,8 +262,10 @@ broadening the static list. Chrome match patterns wildcard the port by default, 
   never embed a form; model transparency lives in result/error copy, not in a control.
 - **Never reflows the page** (position: fixed, high z-index, pointer-events scoped).
 - Dismisses on: `Esc`, outside click, scroll-away, field blur, or navigation.
-- Reads/writes text through the adapter so native **undo/redo is preserved** (avoid
-  `execCommand`; use `InputEvent`-compatible DOM edits and `beforeinput` where available).
+- Reads/writes text through the adapter so native **undo/redo is preserved**: the write helper
+  places the selection and calls `execCommand('insertText')`, the only programmatic edit Chromium
+  keeps in the undo stack (D-006). `insertHTML`, `selectAll` + `delete`, and wholesale
+  `innerHTML` stay banned.
 
 ## 8. Repo structure
 

@@ -55,8 +55,10 @@ type SelectionInfo = { text: string; start?: number; end?: number; range?: Range
    - a formality prior for the site
      Return `{}` when unsure — inference is a best guess the UI can correct, never a requirement.
 
-5. **Implement reads/writes through the shared text-write helper.** Never use `execCommand`.
-   Never replace `innerHTML`. After any write, assert the field is still undoable.
+5. **Implement reads/writes through the shared text-write helper.** It calls
+   `execCommand('insertText')` on a live selection because that is the only programmatic edit
+   Chromium keeps in the undo stack (D-006) — call the helper, never `execCommand` directly, and
+   never assign `innerHTML`. After any write, assert the field is still undoable.
 
 6. **Handle the site's reality.** Gmail's compose is an iframe (`all_frames: true` on a curated
    host). Some editors use their own selection model. If a site needs main-world access, document
@@ -99,7 +101,7 @@ test asserts undo survives. Registered before `generic`; host pattern
 ## Verify
 
 - [ ] Adapter returns `{}` gracefully when DOM changes (no throw).
-- [ ] Fixture tests pass, including the undo-preservation assertion.
+- [ ] Fixture tests pass; undo survival itself is asserted in the browser suite, not in happy-dom.
 - [ ] Removing the adapter leaves the universal path fully functional.
 - [ ] Host permission is the narrowest viable pattern.
 - [ ] `docs/EXPERIENCE.md` surfaces table updated.

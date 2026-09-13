@@ -38,8 +38,10 @@ These are non-negotiable. Violating one is a P0 bug.
    default** — opt-in per site, offered once after the first accepted transform. Invocation is
    explicit only: browser shortcut (`chrome.commands`, remappable), grip click, or context menu.
    Browser-owned shortcuts (`Ctrl+J`, `⌘⇧J`) can never be the default.
-5. **Native undo must survive every write.** Never use `execCommand` or wholesale
-   `innerHTML` replacement. Writes go through the adapter and preserve the field's undo stack.
+5. **Native undo must survive every write.** Writes go through the adapter's shared helper, which
+   places the selection and calls `execCommand('insertText')` — the only programmatic edit
+   Chromium records in a field's undo stack (D-006). Never assign `value` or `innerHTML`
+   wholesale, and never use `insertHTML`. Undo survival is asserted in the browser suite.
 6. **Transform only what the user selected.** Never silently rewrite more of the document.
 7. **Page context is opt-in, previewed, and revocable per site.** No background scraping, no
    `MutationObserver` over `document.body`, no reads until invoke.

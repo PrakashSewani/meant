@@ -246,8 +246,9 @@ the universal adapter still works — degraded inference, never a broken product
 
 **Rich-editor reality check:** Slack/Gmail/LinkedIn use `contenteditable` with their own
 selection models, sometimes inside iframes (Gmail's compose is an iframe) and Shadow DOM. The
-adapter layer must: read/write via `document.execCommand`-free DOM surgery that preserves
-native undo, handle iframe injection (`all_frames: true` for known hosts only), and render our
+adapter layer must: read/write through the shared helper that keeps native undo intact
+(`execCommand('insertText')` on a live selection — see D-006), handle iframe injection
+(`all_frames: true` for known hosts only), and render our
 bar in a **closed Shadow DOM with `all: initial`** so page CSS can't touch it. This is the
 highest-risk engineering area — see [ARCHITECTURE.md](./ARCHITECTURE.md).
 

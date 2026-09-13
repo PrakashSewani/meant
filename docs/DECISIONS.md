@@ -3,6 +3,30 @@
 A lightweight decision log (ADR-style). Add an entry when a decision changes a **contract** —
 storage, privacy, architecture, or roadmap scope. Newest first.
 
+## D-006 — `execCommand('insertText')` is the sanctioned write primitive
+
+**Date:** 2026-09-13 · **Status:** Accepted
+
+**Decision.** Writes place the selection and call `document.execCommand('insertText')`. The ban
+stays on the destructive uses — `insertHTML`, `selectAll` + `delete`, `document.write`, wholesale
+`innerHTML` — and a spec-clean fallback (`beforeinput`/`input` plus `setRangeText`, or a range
+mutation for rich editors) runs wherever the command is missing or refuses.
+
+**Why.** Invariant 5 previously said "never use `execCommand`" and "native undo must survive every
+write" in the same breath, and those cannot both hold: in Chromium, `insertText` on a live
+selection is the _only_ programmatic edit recorded in a field's undo stack. Assigning `value`,
+calling `setRangeText`, or doing DOM surgery all silently drop the user's history. The product
+promise — a `⌘Z` that gives the user their own words back — outranks the tidiness of the API we
+use to keep it.
+
+**Consequences.**
+
+- The deprecated call is confined to one helper in `packages/adapters`; nothing else calls it.
+- Undo survival is asserted in the browser suite. happy-dom exercises only the fallback, so the
+  fallback has to stay correct on its own.
+- If Chrome ever removes `insertText`, native undo goes with it. That is a product-level problem
+  with a product-level answer, not something an adapter can paper over.
+
 ## D-005 — Register memory: local priors learned from chip corrections
 
 **Date:** 2026-09-13 · **Status:** Accepted

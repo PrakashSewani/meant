@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { adapterFor } from './registry';
 import { findEditable, genericAdapter } from './generic';
-import { insertIntoEditable, readEditable } from './write';
+import { insertIntoEditable, readEditable, replaceSelection } from './write';
 import type { Editable } from './types';
 
 function textarea(value = '', placeholder?: string): HTMLTextAreaElement {
@@ -153,5 +153,95 @@ describe('inferContext', () => {
 describe('registry', () => {
   it('falls back to the universal adapter', () => {
     expect(adapterFor(new URL('https://example.com'))).toBe(genericAdapter);
+  });
+});
+
+describe('undo-preserving write', () => {
+  function stubExecCommand(
+    implementation: (command: string, value?: string) => boolean,
+  ): () => void {
+    const original = Object.getOwnPropertyDescriptor(document, 'execCommand');
+
+    Object.defineProperty(document, 'execCommand', {
+      configurable: true,
+      writable: true,
+      value: (command: string, _showUI?: boolean, value?: string) => implementation(command, value),
+    });
+
+    return () => {
+      if (original) Object.defineProperty(document, 'execCommand', original);
+      else Reflect.deleteProperty(document, 'execCommand');
+    };
+  }
+
+  it('prefers the command, because that is the edit the browser keeps in undo', () => {
+    const element = textarea('hello world');
+    element.setSelectionRange(6, 11);
+    const commands: string[] = [];
+    const input = vi.fn();
+    element.addEventListener('input', input);
+
+    const restore = stubExecCommand((command, value) => {
+      commands.push(command);
+      if (command !== 'insertText' || value === undefined) return false;
+
+      element.setRangeText(value, 6, 11, 'end');
+      return true;
+    });
+
+    try {
+      expect(insertIntoEditable(editable(element), 'there')).toBe(true);
+      expect(commands).toEqual(['insertText']);
+      expect(element.value).toBe('hello there');
+      // The browser fires its own beforeinput/input for the command; firing ours too would double them.
+      expect(input).not.toHaveBeenCalled();
+    } finally {
+      restore();
+    }
+  });
+
+  it('falls back to a spec-clean edit when the engine refuses the command', () => {
+    const element = textarea('hello world');
+    element.setSelectionRange(6, 11);
+    const input = vi.fn();
+    element.addEventListener('input', input);
+
+    const restore = stubExecCommand(() => false);
+    try {
+      expect(insertIntoEditable(editable(element), 'there')).toBe(true);
+      expect(element.value).toBe('hello there');
+      expect(input).toHaveBeenCalledOnce();
+    } finally {
+      restore();
+    }
+  });
+
+  it('uses the command for rich editors too instead of hand-editing the DOM', () => {
+    const element = document.createElement('div');
+    element.setAttribute('contenteditable', 'true');
+    element.textContent = 'hello world';
+    document.body.append(element);
+
+    const textNode = element.firstChild;
+    if (!textNode) throw new Error('expected a text node');
+
+    const range = document.createRange();
+    range.setStart(textNode, 6);
+    range.setEnd(textNode, 11);
+
+    const restore = stubExecCommand((command, value) => {
+      if (command !== 'insertText' || value === undefined) return false;
+
+      range.deleteContents();
+      range.insertNode(document.createTextNode(value));
+      return true;
+    });
+
+    try {
+      expect(replaceSelection(editable(element), { text: 'world', range }, 'there')).toBe(true);
+      expect(element.textContent).toBe('hello there');
+    } finally {
+      restore();
+    }
   });
 });
