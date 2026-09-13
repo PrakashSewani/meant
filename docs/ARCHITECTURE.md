@@ -247,8 +247,9 @@ extension-owned surface. The Provider doctor is gated the same way.
 `all_frames: true` is **scoped to a curated host list**, never `<all_urls>`, because Gmail's
 compose lives in an iframe. Sites outside the curated list are enabled with a runtime per-origin
 grant (`chrome.permissions.request`, then `chrome.scripting.registerContentScripts`) — never by
-broadening the static list. Chrome match patterns wildcard the port by default, so
-`http://localhost/*` covers every local server port.
+broadening the static list. The curated list and its patterns live in
+`packages/core/src/sites.ts`, so the manifest and the popup cannot drift apart. Chrome match
+patterns wildcard the port by default, so `http://localhost/*` covers every local server port.
 
 ## 7. The Register Bar (rendering)
 

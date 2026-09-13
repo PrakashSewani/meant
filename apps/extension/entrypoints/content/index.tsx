@@ -5,7 +5,9 @@ import '@sayable/ui/styles.css';
 import { adapterFor, type Editable, type SelectionInfo } from '@sayable/adapters';
 import {
   InvokeMessageSchema,
+  PingMessageSchema,
   StreamEventSchema,
+  curatedMatchPatterns,
   resolveRegister,
   type Effort,
   type Register,
@@ -18,22 +20,31 @@ const PORT_NAME = 'sayable-transform';
 const RECIPE_ID = 'say-it-better';
 
 export default defineContentScript({
-  matches: [
-    'https://mail.google.com/*',
-    'https://app.slack.com/*',
-    'https://*.atlassian.net/*',
-    'http://localhost/*',
-  ],
+  matches: curatedMatchPatterns(),
   allFrames: true,
   runAt: 'document_idle',
+  // The bar lives in a shadow root, so its stylesheet has to be injected there with it.
+  cssInjectionMode: 'ui',
   main(ctx) {
+    // A site enabled at runtime gets this file injected on demand as well as registered for
+    // later navigations, so the frame may already be initialised.
+    const frame = globalThis as { __sayableLoaded?: boolean };
+    if (frame.__sayableLoaded) return;
+    frame.__sayableLoaded = true;
+
     const adapter = adapterFor(new URL(location.href));
 
-    browser.runtime.onMessage.addListener((message: unknown) => {
+    browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
+      if (PingMessageSchema.safeParse(message).success) {
+        sendResponse({ alive: true });
+        return undefined;
+      }
+
       const parsed = InvokeMessageSchema.safeParse(message);
-      if (!parsed.success) return;
+      if (!parsed.success) return undefined;
 
       void openBar(adapter, ctx);
+      return undefined;
     });
   },
 });

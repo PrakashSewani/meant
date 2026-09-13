@@ -72,13 +72,16 @@ declared set enumerable.
 
 - Enabling a provider or a site shows a browser permission prompt. The copy must say what the
   origin is for — an unexplained prompt is a trust cost we pay deliberately, not accidentally.
+- To let any site be enabled, the manifest declares `https://*/*` **optionally**. The declaration
+  is broad; the grant is not. One origin, from a click in the popup, revocable there, and nothing
+  is granted at install.
 - v1 ships a curated provider list (Anthropic, OpenAI, OpenRouter, Groq, Gemini, and local
   Ollama / LM Studio / llama.cpp). "Any OpenAI-compatible endpoint" waits for v1.x and the same
   runtime-grant flow.
 - Sites outside the curated content-script list are enabled with a runtime grant _followed by_
   `chrome.scripting.registerContentScripts` — never by broadening the static list.
-- Broadening the _declared_ optional set to cover arbitrary origins is a separate decision with
-  Web Store review consequences; verify and record before submission.
+- The Web Store review impact of that broad optional declaration is still to be verified before
+  submission, and the answer recorded here.
 
 ## D-003 — Key custody: `chrome.storage.local` + optional encrypted vault
 

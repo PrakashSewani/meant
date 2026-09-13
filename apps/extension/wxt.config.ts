@@ -12,9 +12,9 @@ export default defineConfig({
     description: 'Turn messy intent into the right register, in any text box.',
     permissions: ['storage', 'contextMenus', 'activeTab', 'scripting', 'alarms'],
     optional_permissions: ['sidePanel'],
-    // Nothing provider-related is granted at install. Enabling a preset in the options page
-    // requests exactly that origin, once (D-004).
-    optional_host_permissions: [...PROVIDER_ORIGINS],
+    // Declared broadly so any site can be enabled from a user gesture; the *granted* set stays
+    // one origin at a time and is revocable (D-004). Nothing here is granted at install.
+    optional_host_permissions: [...PROVIDER_ORIGINS, 'https://*/*'],
     commands: {
       'invoke-register-bar': {
         suggested_key: { default: 'Alt+J' },

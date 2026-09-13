@@ -42,6 +42,10 @@ export const StreamEventSchema = z.discriminatedUnion('type', [
 
 export const InvokeMessageSchema = z.object({ type: z.literal('invoke-bar') });
 
+export const PingMessageSchema = z.object({ type: z.literal('sayable-ping') });
+
+export const PingResponseSchema = z.object({ alive: z.literal(true) });
+
 export const DoctorRequestSchema = z.object({ type: z.literal('doctor') });
 
 export type DoctorRequest = z.infer<typeof DoctorRequestSchema>;
