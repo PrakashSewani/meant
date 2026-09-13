@@ -114,6 +114,39 @@ test('a configured endpoint is called for real, through the same pipeline', asyn
   }
 });
 
+test('editing a chip reaches the model, not just the pill', async () => {
+  const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
+  await worker.evaluate(() => chrome.storage.local.remove('meant.events'));
+
+  const page = await context.newPage();
+  await page.goto(FIXTURE);
+  await page.locator('#plain').selectText();
+  await invokeBar(context);
+
+  const bar = page.locator('meant-bar');
+  await expect(bar).toHaveAttribute('data-state', 'idle');
+
+  // Tab order is ours: recipe, primary, close, then the chips. Five stops lands on Tone.
+  for (let stop = 0; stop < 5; stop += 1) await page.keyboard.press('Tab');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('direct, warm');
+  await page.keyboard.press('Tab');
+
+  // Back to the primary action: Tone, Who, close, primary.
+  for (let stop = 0; stop < 4; stop += 1) await page.keyboard.press('Shift+Tab');
+  await page.keyboard.press('Enter');
+
+  await expect(bar).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
+  await page.keyboard.press('Enter');
+
+  const events = await worker.evaluate(async () => {
+    const stored = await chrome.storage.local.get('meant.events');
+    return stored['meant.events'] as { sent: { tone?: string[] } }[];
+  });
+
+  expect(events.at(-1)?.sent.tone).toEqual(['direct', 'warm']);
+});
+
 /**
  * Drives the same path the browser command does: the worker tells the tab to open the bar. The
  * command itself is a browser-level shortcut, which is not ours to test.

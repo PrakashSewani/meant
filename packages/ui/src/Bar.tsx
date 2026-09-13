@@ -144,12 +144,12 @@ export function Bar({
         return;
       }
 
-      // ⏎ is the primary action — transform, then accept — but never at the expense of a control
-      // that needs it: an open select menu, or a chip mid-edit.
+      // ⏎ is the primary action — transform, then accept — but only when nothing else wants it.
+      // On a control it belongs to that control: a pill opens its editor, a select its menu.
       const target = event.target as HTMLElement | null;
-      const typing = target?.matches('select, input, textarea') ?? false;
+      const onControl = target?.matches('button, select, input, textarea') ?? false;
 
-      if (key === 'Enter' && !typing && !working) {
+      if (key === 'Enter' && !onControl && !working) {
         event.preventDefault();
         onPrimary?.();
       }
@@ -318,13 +318,19 @@ function Chip({
   useEffect(() => {
     if (!editing) return;
 
-    function onPointerDown(event: MouseEvent) {
-      if (!wrapper.current?.contains(event.target as Node)) setEditing(false);
+    // On the shadow root, not the document: from outside a closed root every target is retargeted
+    // to the host, so a document listener sees a click *inside* the editor as a click outside it.
+    const root = wrapper.current?.getRootNode();
+    if (!root) return;
+
+    function onPointerDown(event: Event) {
+      const path = event.composedPath();
+      if (!wrapper.current || !path.includes(wrapper.current)) setEditing(false);
     }
 
-    document.addEventListener('mousedown', onPointerDown);
+    root.addEventListener('mousedown', onPointerDown);
 
-    return () => document.removeEventListener('mousedown', onPointerDown);
+    return () => root.removeEventListener('mousedown', onPointerDown);
   }, [editing]);
 
   if (editing) {
@@ -372,6 +378,7 @@ function TextEditor({
         value={draft}
         list={listId}
         placeholder={placeholder}
+        onFocus={(event) => event.currentTarget.select()}
         onChange={(event) => setDraft(event.target.value)}
         onBlur={() => onCommit(draft)}
         onKeyDown={(event) => {
