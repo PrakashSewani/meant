@@ -41,11 +41,17 @@ async function openBar(adapter: ReturnType<typeof adapterFor>): Promise<void> {
   if (!document.hasFocus()) return;
 
   const element = activeEditable(adapter);
-  if (!element) return;
+  if (!element) {
+    showNotice('Click into a text box first, then try again.');
+    return;
+  }
 
   const selection = adapter.getSelection(element);
   const intentText = (selection?.text ?? adapter.read(element)).trim();
-  if (!intentText) return;
+  if (!intentText) {
+    showNotice('Nothing to transform — write something first.');
+    return;
+  }
 
   const [mount, styles] = await Promise.all([ensureBar(), ensureStyles()]);
   if (!mount) return;
@@ -80,12 +86,6 @@ async function openBar(adapter: ReturnType<typeof adapterFor>): Promise<void> {
     },
     onDismiss: close,
   });
-
-  // The dialog takes focus when it opens, so the whole loop is reachable by keyboard. React
-  // renders on the next frame, so the element is not there to focus yet.
-  requestAnimationFrame(() => {
-    shadow.querySelector<HTMLElement>('[role="dialog"]')?.focus();
-  });
 }
 
 /**
@@ -116,6 +116,38 @@ async function ensureStyles(): Promise<string> {
     .catch(() => '');
 
   return frame.__meantStyles;
+}
+
+/**
+ * A short-lived, self-contained message. It appears only in response to something the user did,
+ * and it never blocks the page.
+ */
+function showNotice(message: string): void {
+  const host = document.createElement('meant-notice');
+  const shadow = host.attachShadow({ mode: 'closed' });
+  const box = document.createElement('div');
+
+  box.textContent = message;
+  box.setAttribute(
+    'style',
+    [
+      'position:fixed',
+      'right:24px',
+      'bottom:24px',
+      'z-index:2147483647',
+      'max-width:20rem',
+      'padding:10px 12px',
+      'border-radius:10px',
+      'background:#171717',
+      'color:#fafafa',
+      'font:13px/1.4 system-ui,sans-serif',
+      'box-shadow:0 8px 24px rgb(0 0 0 / 24%)',
+    ].join(';'),
+  );
+
+  shadow.append(box);
+  document.documentElement.append(host);
+  setTimeout(() => host.remove(), 4000);
 }
 
 function activeEditable(adapter: ReturnType<typeof adapterFor>): Editable | null {

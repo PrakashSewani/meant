@@ -199,6 +199,9 @@ extension-owned surface. The Provider doctor is gated the same way.
   _another provider behind the same interface_ — opt-in, never a requirement, and it never
   disables the BYOK or local paths.
 - **Local-first by default.** Inference, voice, recipes, and history live on device.
+- **Site access is the user's call, and it is visible.** Per site, or every site in one
+  gesture from the popup; revocable in the same place. Nothing is granted at install, and the
+  toolbar shows when Meant is off somewhere.
 - **Context is opt-in and previewed.** "Include this thread" shows exactly what will be sent.
 - **Redaction pass (optional).** Strip emails, tokens, and phone numbers before send, per site.
 - **Local-model path.** Ollama/LM Studio means nothing leaves the machine at all.

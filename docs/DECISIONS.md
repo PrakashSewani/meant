@@ -86,6 +86,10 @@ declared set enumerable.
 - The bar's stylesheet is handed to the injected script by the worker rather than fetched from the
   page: a page-context fetch of an extension resource needs `web_accessible_resources`, and a
   public path is a fingerprint any page could read.
+- The popup offers **enable on all sites**: one runtime grant of `https://*/*` that registers a
+  broad dynamic content script. It is still granted at runtime from a gesture and still revocable,
+  but the grant is large, and the user chooses it knowing what Chrome's prompt says. Per-site
+  remains available for anyone who wants the smaller grant — but it is a choice, not a chore.
 - The Web Store review impact of that broad optional declaration is still to be verified before
   submission, and the answer recorded here.
 

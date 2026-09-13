@@ -16,6 +16,8 @@ const CONFIG_KEY = 'meant.config';
 const SECRETS_KEY = 'meant.secrets';
 const EVENTS_KEY = 'meant.events';
 const CONTENT_SCRIPT = '/content-scripts/content.js';
+const ALL_SITES_ID = 'meant-all-sites';
+const ALL_SITES_ORIGIN = 'https://*/*';
 const PING = { type: 'meant-ping' } as const;
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -31,6 +33,7 @@ function Popup() {
   const [shortcut, setShortcut] = useState<string>();
   const [tab, setTab] = useState<TabInfo>();
   const [here, setHere] = useState(false);
+  const [everywhere, setEverywhere] = useState(false);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string>();
   const [summary, setSummary] = useState<EventSummary>();
@@ -56,6 +59,8 @@ function Popup() {
     const commands = await browser.commands.getAll();
     const invoke = commands.find((command) => command.name === 'invoke-register-bar');
     setShortcut(invoke?.shortcut || 'unassigned');
+
+    setEverywhere(await browser.permissions.contains({ origins: [ALL_SITES_ORIGIN] }));
 
     const [current] = await browser.tabs.query({ active: true, currentWindow: true });
     const info = describeTab(current);
@@ -121,6 +126,57 @@ function Popup() {
     }
   }
 
+  /** One prompt, every site: the alternative to enabling them one at a time. */
+  async function enableEverywhere() {
+    setBusy(true);
+    setNote(undefined);
+
+    try {
+      const granted = await browser.permissions.request({ origins: ['https://*/*'] });
+      if (!granted) {
+        setNote('The permission was declined, so nothing was enabled.');
+        return;
+      }
+
+      await browser.scripting
+        .unregisterContentScripts({ ids: [ALL_SITES_ID] })
+        .catch(() => undefined);
+      await browser.scripting.registerContentScripts([
+        {
+          id: ALL_SITES_ID,
+          matches: ['https://*/*'],
+          js: [CONTENT_SCRIPT],
+          runAt: 'document_idle',
+          allFrames: true,
+          persistAcrossSessions: true,
+        },
+      ]);
+
+      setEverywhere(true);
+      setHere(true);
+      setNote('Enabled on all sites. Reload a page you already had open to use it there.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function disableEverywhere() {
+    setBusy(true);
+
+    try {
+      await browser.scripting
+        .unregisterContentScripts({ ids: [ALL_SITES_ID] })
+        .catch(() => undefined);
+      await browser.permissions.remove({ origins: ['https://*/*'] });
+
+      setEverywhere(false);
+      setHere(false);
+      setNote('Turned off everywhere.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <main className="w-72 p-4 text-sm text-neutral-800">
       <h1 className="text-base font-medium">{BRAND.name}</h1>
@@ -177,6 +233,20 @@ function Popup() {
             {here ? 'Turn off here' : 'Enable on this site'}
           </button>
         )}
+
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => void (everywhere ? disableEverywhere() : enableEverywhere())}
+          className="mt-2 w-full rounded-md bg-neutral-900 px-3 py-2 text-xs font-medium text-white disabled:opacity-50"
+        >
+          {everywhere ? 'Turn off on all sites' : 'Enable on all sites'}
+        </button>
+        <p className="mt-2 text-xs text-neutral-500">
+          {everywhere
+            ? 'Working everywhere you browse. Revoke it here whenever you want.'
+            : 'Asks once for access to the sites you visit, instead of enabling them one at a time.'}
+        </p>
 
         {note ? <p className="mt-2 text-xs text-neutral-600">{note}</p> : null}
       </section>

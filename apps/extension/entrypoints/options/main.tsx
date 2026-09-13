@@ -144,153 +144,163 @@ function Options() {
   }
 
   return (
-    <main className="mx-auto max-w-xl p-8 text-sm text-neutral-800">
-      <h1 className="text-lg font-medium">Meant settings</h1>
+    <main className="min-h-screen bg-neutral-100 px-6 py-10 text-sm text-neutral-800">
+      <div className="mx-auto max-w-xl">
+        <h1 className="text-xl font-semibold tracking-tight">Meant settings</h1>
+        <p className="mt-1 text-xs text-neutral-500">
+          Your key and your config stay in this browser profile. Nothing is sent anywhere except the
+          provider you pick.
+        </p>
 
-      <section className="mt-6">
-        <h2 className="text-xs font-medium tracking-wide text-neutral-500 uppercase">Provider</h2>
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          {PRESETS.map((candidate) => (
+        <section className="mt-6 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+          <h2 className="text-xs font-medium tracking-wide text-neutral-500 uppercase">Provider</h2>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            {PRESETS.map((candidate) => (
+              <PresetButton
+                key={candidate.id}
+                label={candidate.name}
+                selected={candidate.id === selected}
+                onSelect={() => {
+                  setSelected(candidate.id);
+                  setStatus(undefined);
+                }}
+              />
+            ))}
             <PresetButton
-              key={candidate.id}
-              label={candidate.name}
-              selected={candidate.id === selected}
+              label="Custom (OpenAI-compatible)"
+              selected={selected === 'custom'}
               onSelect={() => {
-                setSelected(candidate.id);
+                setSelected('custom');
                 setStatus(undefined);
               }}
             />
-          ))}
-          <PresetButton
-            label="Custom (OpenAI-compatible)"
-            selected={selected === 'custom'}
-            onSelect={() => {
-              setSelected('custom');
-              setStatus(undefined);
-            }}
-          />
-        </div>
+          </div>
 
-        {preset ? (
-          <p className="mt-2 text-xs text-neutral-500">
-            {preset.notes} · {preset.transport}
-            {preset.local ? ' · nothing leaves this device' : ''}
-          </p>
-        ) : (
-          <p className="mt-2 text-xs text-neutral-500">
-            Any endpoint that speaks the OpenAI API: a gateway, a proxy, your own server, or a
-            provider that is not listed.
-          </p>
-        )}
-      </section>
-
-      {selected === 'custom' ? (
-        <section className="mt-6 space-y-3">
-          <h2 className="text-xs font-medium tracking-wide text-neutral-500 uppercase">Endpoint</h2>
-          <Field
-            label="Id"
-            value={custom.id}
-            placeholder="commandcode"
-            hint="Used in model references, so keep it short."
-            onChange={(id) => setCustom({ ...custom, id })}
-          />
-          <Field
-            label="Name"
-            value={custom.name}
-            placeholder="Command Code"
-            onChange={(name) => setCustom({ ...custom, name })}
-          />
-          <Field
-            label="Base URL"
-            value={custom.baseURL}
-            placeholder="https://api.example.com/v1"
-            onChange={(baseURL) => setCustom({ ...custom, baseURL })}
-          />
-          <Field
-            label="Key"
-            value={custom.apiKey}
-            placeholder="paste it here"
-            secret
-            onChange={(apiKey) => setCustom({ ...custom, apiKey })}
-          />
-          <Field
-            label="Model"
-            value={custom.main}
-            placeholder="gpt-5.2"
-            hint="The one Balanced transforms use."
-            onChange={(main) => setCustom({ ...custom, main })}
-          />
-          <Field
-            label="Fast model"
-            value={custom.fast}
-            placeholder="optional"
-            onChange={(fast) => setCustom({ ...custom, fast })}
-          />
-          <Field
-            label="Deep model"
-            value={custom.reasoning}
-            placeholder="optional"
-            onChange={(reasoning) => setCustom({ ...custom, reasoning })}
-          />
+          {preset ? (
+            <p className="mt-2 text-xs text-neutral-500">
+              {preset.notes} · {preset.transport}
+              {preset.local ? ' · nothing leaves this device' : ''}
+            </p>
+          ) : (
+            <p className="mt-2 text-xs text-neutral-500">
+              Any endpoint that speaks the OpenAI API: a gateway, a proxy, your own server, or a
+              provider that is not listed.
+            </p>
+          )}
         </section>
-      ) : null}
 
-      {preset?.auth === 'apiKey' ? (
-        <section className="mt-6">
-          <h2 className="text-xs font-medium tracking-wide text-neutral-500 uppercase">API key</h2>
-          <input
-            type="password"
-            value={apiKey}
-            onChange={(event) => setApiKey(event.target.value)}
-            placeholder={`${preset.name} key`}
-            className="mt-2 w-full rounded-md border border-neutral-300 px-3 py-2 font-mono text-xs"
-          />
-          <p className="mt-2 text-xs text-neutral-500">
-            Stored in this browser profile only. Never synced, never readable by a page.
-          </p>
-        </section>
-      ) : null}
+        {selected === 'custom' ? (
+          <section className="mt-6 space-y-3 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+            <h2 className="text-xs font-medium tracking-wide text-neutral-500 uppercase">
+              Endpoint
+            </h2>
+            <Field
+              label="Id"
+              value={custom.id}
+              placeholder="commandcode"
+              hint="Used in model references, so keep it short."
+              onChange={(id) => setCustom({ ...custom, id })}
+            />
+            <Field
+              label="Name"
+              value={custom.name}
+              placeholder="Command Code"
+              onChange={(name) => setCustom({ ...custom, name })}
+            />
+            <Field
+              label="Base URL"
+              value={custom.baseURL}
+              placeholder="https://api.example.com/v1"
+              onChange={(baseURL) => setCustom({ ...custom, baseURL })}
+            />
+            <Field
+              label="Key"
+              value={custom.apiKey}
+              placeholder="paste it here"
+              secret
+              onChange={(apiKey) => setCustom({ ...custom, apiKey })}
+            />
+            <Field
+              label="Model"
+              value={custom.main}
+              placeholder="gpt-5.2"
+              hint="The one Balanced transforms use."
+              onChange={(main) => setCustom({ ...custom, main })}
+            />
+            <Field
+              label="Fast model"
+              value={custom.fast}
+              placeholder="optional"
+              onChange={(fast) => setCustom({ ...custom, fast })}
+            />
+            <Field
+              label="Deep model"
+              value={custom.reasoning}
+              placeholder="optional"
+              onChange={(reasoning) => setCustom({ ...custom, reasoning })}
+            />
+          </section>
+        ) : null}
 
-      <button
-        type="button"
-        onClick={() => void save()}
-        disabled={selected === 'custom' && Boolean(problem)}
-        className="mt-6 rounded-md bg-neutral-900 px-4 py-2 text-xs font-medium text-white disabled:opacity-40"
-      >
-        Save and enable
-      </button>
+        {preset?.auth === 'apiKey' ? (
+          <section className="mt-6 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+            <h2 className="text-xs font-medium tracking-wide text-neutral-500 uppercase">
+              API key
+            </h2>
+            <input
+              type="password"
+              value={apiKey}
+              onChange={(event) => setApiKey(event.target.value)}
+              placeholder={`${preset.name} key`}
+              className="mt-2 w-full rounded-md border border-neutral-300 px-3 py-2 font-mono text-xs"
+            />
+            <p className="mt-2 text-xs text-neutral-500">
+              Stored in this browser profile only. Never synced, never readable by a page.
+            </p>
+          </section>
+        ) : null}
 
-      <button
-        type="button"
-        onClick={() => void testConnection()}
-        disabled={testing}
-        className="mt-6 ml-2 rounded-md border border-neutral-300 px-4 py-2 text-xs font-medium disabled:opacity-50"
-      >
-        {testing ? 'Testing…' : 'Test connection'}
-      </button>
+        <button
+          type="button"
+          onClick={() => void save()}
+          disabled={selected === 'custom' && Boolean(problem)}
+          className="mt-6 rounded-md bg-neutral-900 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-neutral-700 disabled:opacity-40"
+        >
+          Save and enable
+        </button>
 
-      {status ? <p className="mt-3 text-xs text-neutral-600">{status}</p> : null}
+        <button
+          type="button"
+          onClick={() => void testConnection()}
+          disabled={testing}
+          className="mt-6 ml-2 rounded-md border border-neutral-300 bg-white px-4 py-2 text-xs font-medium transition-colors hover:bg-neutral-50 disabled:opacity-50"
+        >
+          {testing ? 'Testing…' : 'Test connection'}
+        </button>
 
-      {report ? (
-        <section className="mt-3">
-          <p className={`text-xs ${report.ok ? 'text-neutral-600' : 'text-neutral-800'}`}>
-            {report.message}
-          </p>
-          <ul className="mt-2 space-y-1">
-            {report.checks.map((check) => (
-              <li key={check.label} className="flex gap-2 text-xs">
-                <span aria-hidden className={check.ok ? 'text-neutral-500' : 'text-red-700'}>
-                  {check.ok ? '✓' : '✗'}
-                </span>
-                <span className="text-neutral-500">{check.label}</span>
-                <span className={check.ok ? 'text-neutral-500' : 'text-red-700'}>
-                  {check.ok ? '' : check.message}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+        {status ? <p className="mt-3 text-xs text-neutral-600">{status}</p> : null}
+
+        {report ? (
+          <section className="mt-3 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+            <p className={`text-xs ${report.ok ? 'text-neutral-600' : 'text-neutral-800'}`}>
+              {report.message}
+            </p>
+            <ul className="mt-2 space-y-1">
+              {report.checks.map((check) => (
+                <li key={check.label} className="flex gap-2 text-xs">
+                  <span aria-hidden className={check.ok ? 'text-neutral-500' : 'text-red-700'}>
+                    {check.ok ? '✓' : '✗'}
+                  </span>
+                  <span className="text-neutral-500">{check.label}</span>
+                  <span className={check.ok ? 'text-neutral-500' : 'text-red-700'}>
+                    {check.ok ? '' : check.message}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+      </div>
     </main>
   );
 }

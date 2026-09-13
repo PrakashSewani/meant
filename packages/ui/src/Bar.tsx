@@ -53,6 +53,12 @@ export function Bar({
   }
 
   useEffect(() => {
+    // Take focus once the bar is actually on screen, so the keyboard loop starts here rather than
+    // in the page underneath.
+    dialog.current?.focus();
+  }, []);
+
+  useEffect(() => {
     // Listening on the shadow root rather than the document is what keeps the page's own keys out:
     // nothing below it is the page's, and nothing above it is ours.
     const root = dialog.current?.getRootNode();

@@ -37,7 +37,8 @@ test('polish, accept, and one native undo puts the original text back', async ()
   // Keyboard only: the bar takes focus when it opens, so ⏎ accepts the result.
   await page.keyboard.press('Enter');
 
-  await expect(field).not.toHaveValue(original);
+  // Assert the answer, not just "something changed": a stray keystroke would satisfy that.
+  await expect(field).toHaveValue(/^\[mock\] ugh tell sarah/);
 
   // The whole point of the write helper: Chromium recorded the edit, so ⌘Z gives the words back.
   await page.evaluate(() => document.execCommand('undo'));

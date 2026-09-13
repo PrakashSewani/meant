@@ -33,6 +33,7 @@ const CONFIG_KEY = 'meant.config';
 const SECRETS_KEY = 'meant.secrets';
 const EVENTS_KEY = 'meant.events';
 const CONTEXT_MENU_ID = 'meant-invoke';
+const CONTENT_SCRIPT_PATH = '/content-scripts/content.js';
 
 const MOCK_MODEL: ResolvedModel = {
   providerId: 'mock',
@@ -155,7 +156,67 @@ function post(port: Browser.runtime.Port, event: StreamEvent): void {
 
 /** Every frame hears the invoke; only the focused one opens a bar (see the content script). */
 async function invokeIn(tabId: number): Promise<void> {
-  await browser.tabs.sendMessage(tabId, { type: 'invoke-bar' }).catch(() => undefined);
+  if (await sendInvoke(tabId)) {
+    await clearFlag(tabId);
+    return;
+  }
+
+  // Nothing answered: either the page was open before the site was enabled, or this site has not
+  // been enabled at all. Heal the first case, and say so out loud in the second — an invoke that
+  // does nothing is indistinguishable from a broken extension.
+  const origin = await grantedOriginFor(tabId);
+
+  if (origin) {
+    await browser.scripting
+      .executeScript({ target: { tabId, allFrames: true }, files: [CONTENT_SCRIPT_PATH] })
+      .catch(() => undefined);
+
+    if (await sendInvoke(tabId)) {
+      await clearFlag(tabId);
+      return;
+    }
+  }
+
+  await flagTab(tabId);
+}
+
+async function sendInvoke(tabId: number): Promise<boolean> {
+  try {
+    await browser.tabs.sendMessage(tabId, { type: 'invoke-bar' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** The tab's origin, but only if we already hold permission for it. */
+async function grantedOriginFor(tabId: number): Promise<string | undefined> {
+  const tab = await browser.tabs.get(tabId).catch(() => undefined);
+  if (!tab?.url) return undefined;
+
+  let origin: string;
+  try {
+    const url = new URL(tab.url);
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') return undefined;
+    origin = `${url.protocol}//${url.hostname}/*`;
+  } catch {
+    return undefined;
+  }
+
+  return (await browser.permissions.contains({ origins: [origin] })) ? origin : undefined;
+}
+
+async function flagTab(tabId: number): Promise<void> {
+  await browser.action.setBadgeText({ tabId, text: '!' }).catch(() => undefined);
+  await browser.action.setBadgeBackgroundColor({ tabId, color: '#737373' }).catch(() => undefined);
+  await browser.action
+    .setTitle({ tabId, title: `${BRAND.name} is off here — click the icon to turn it on` })
+    .catch(() => undefined);
+}
+
+async function clearFlag(tabId: number): Promise<void> {
+  await browser.action.setBadgeText({ tabId, text: '' }).catch(() => undefined);
+  await browser.action.setTitle({ tabId, title: BRAND.name }).catch(() => undefined);
 }
 
 async function injectBarScript(sender: Browser.runtime.MessageSender): Promise<void> {

@@ -50,8 +50,10 @@ These are non-negotiable. Violating one is a P0 bug.
 8. **Untrusted content is framed as data.** Page/thread text goes into prompts inside explicit
    delimiters with an instruction never to follow instructions found within it.
 9. **No telemetry by default.** Adding any network destination must be documented, justified,
-   and added to `host_permissions` deliberately — never `<all_urls>`. Origins beyond the curated
-   list are granted at runtime, per origin, from a user gesture (D-004). A hosted/accounts
+   and added to `host_permissions` deliberately — never `<all_urls>` as a _static_ declaration. Origins beyond the curated
+   list are granted at runtime from a user gesture (D-004) — one origin at a time, or all of them
+   at once if the user chooses that in the popup. The grant is theirs to make and theirs to
+   revoke; what is forbidden is taking it silently. A hosted/accounts
    feature is opt-in, disclosed, and user-visible in its metering; the local path must work
    without it.
 10. **No chat surface.** The output is a diff/result, not a conversation. Do not add a
