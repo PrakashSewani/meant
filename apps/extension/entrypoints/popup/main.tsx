@@ -181,7 +181,7 @@ function Popup() {
   return (
     <main className="w-72 p-4 text-sm text-neutral-800">
       <div className="flex items-center gap-2">
-        <Mark size={22} className="text-neutral-900 [--meant-mark-cut:white]" />
+        <Mark size={22} className="text-neutral-900" />
         <h1 className="text-base font-medium">{BRAND.name}</h1>
       </div>
       <p className="mt-1 text-xs text-neutral-500">{BRAND.tagline}</p>
