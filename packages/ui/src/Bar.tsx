@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Effort, Length, Register } from '@sayable/core';
 import {
   FORMAT_SUGGESTIONS,
@@ -10,9 +10,6 @@ import {
 
 const EFFORTS: readonly Effort[] = ['quick', 'balanced', 'deep'];
 const LENGTHS: readonly Length[] = ['short', 'medium', 'long'];
-
-/** The light-DOM element hosting the closed shadow root. Both sides of the boundary need it. */
-export const BAR_TAG = 'sayable-bar';
 
 export interface RecipeChoice {
   id: string;
@@ -49,39 +46,41 @@ export function Bar({
   onDismiss,
 }: BarProps) {
   const [expanded, setExpanded] = useState(false);
+  const dialog = useRef<HTMLDivElement>(null);
 
   function change(patch: Partial<Register>) {
     onRegisterChange?.({ ...register, ...patch });
   }
 
   useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      // Keys pressed inside a closed shadow root are retargeted to its host, so this also tells
-      // us the key came from the bar and not from the page underneath it.
-      const fromBar = event
-        .composedPath()
-        .some((node) => node instanceof Element && node.tagName.toLowerCase() === BAR_TAG);
-      if (!fromBar) return;
+    // Listening on the shadow root rather than the document is what keeps the page's own keys out:
+    // nothing below it is the page's, and nothing above it is ours.
+    const root = dialog.current?.getRootNode();
+    if (!(root instanceof ShadowRoot)) return;
 
-      if (event.key === 'Enter' && result) {
+    function onKeyDown(event: Event) {
+      const { key } = event as KeyboardEvent;
+      if (key === 'Enter' && result) {
         event.preventDefault();
         onAccept?.();
       }
-      if (event.key === 'Escape') {
+      if (key === 'Escape') {
         event.preventDefault();
         onDismiss?.();
       }
     }
 
-    window.addEventListener('keydown', onKeyDown);
+    root.addEventListener('keydown', onKeyDown);
 
-    return () => window.removeEventListener('keydown', onKeyDown);
+    return () => root.removeEventListener('keydown', onKeyDown);
   }, [result, onAccept, onDismiss]);
 
   return (
     <div
+      ref={dialog}
       role="dialog"
       aria-label="Sayable"
+      tabIndex={-1}
       className="sayable-bar pointer-events-auto fixed right-6 bottom-6 z-[2147483647] w-[26rem] rounded-xl border border-neutral-200 bg-white font-sans text-sm text-neutral-900 shadow-xl"
     >
       <div className="flex items-center gap-2 px-3 py-2">

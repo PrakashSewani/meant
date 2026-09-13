@@ -80,6 +80,12 @@ declared set enumerable.
   runtime-grant flow.
 - Sites outside the curated content-script list are enabled with a runtime grant _followed by_
   `chrome.scripting.registerContentScripts` — never by broadening the static list.
+- The curated hosts are declared in `host_permissions`, not only as content-script matches: the
+  worker needs the grant to inject the bar bundle into a frame on first invoke, and a match alone
+  does not permit that. The list is bounded and is the same one the product claims to support.
+- The bar's stylesheet is handed to the injected script by the worker rather than fetched from the
+  page: a page-context fetch of an extension resource needs `web_accessible_resources`, and a
+  public path is a fingerprint any page could read.
 - The Web Store review impact of that broad optional declaration is still to be verified before
   submission, and the answer recorded here.
 

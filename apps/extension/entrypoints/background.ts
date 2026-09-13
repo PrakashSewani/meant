@@ -1,6 +1,8 @@
 import type { Browser } from 'wxt/browser';
 import {
   BRAND,
+  BarScriptRequestSchema,
+  BarStylesRequestSchema,
   DoctorRequestSchema,
   PortRequestSchema,
   RecordEventMessageSchema,
@@ -22,6 +24,7 @@ import {
   type StreamEvent,
   type TransformEvent,
 } from '@sayable/core';
+import { BAR_SCRIPT_PATH, BAR_STYLES_PATH } from '../lib/bar-bridge';
 import { selectTransport } from '@sayable/core/transports';
 import { validateConfig, type SayableConfig } from '@sayable/config';
 
@@ -64,9 +67,19 @@ export default defineBackground(() => {
     await invokeIn(tab.id);
   });
 
-  browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
+  browser.runtime.onMessage.addListener((message: unknown, sender, sendResponse) => {
     if (DoctorRequestSchema.safeParse(message).success) {
       void runDoctorHere().then(sendResponse);
+      return true;
+    }
+
+    if (BarScriptRequestSchema.safeParse(message).success) {
+      void injectBarScript(sender).then(() => sendResponse({ ok: true }));
+      return true;
+    }
+
+    if (BarStylesRequestSchema.safeParse(message).success) {
+      void readBarStyles().then((css) => sendResponse({ css }));
       return true;
     }
 
@@ -143,6 +156,30 @@ function post(port: Browser.runtime.Port, event: StreamEvent): void {
 /** Every frame hears the invoke; only the focused one opens a bar (see the content script). */
 async function invokeIn(tabId: number): Promise<void> {
   await browser.tabs.sendMessage(tabId, { type: 'invoke-bar' }).catch(() => undefined);
+}
+
+async function injectBarScript(sender: Browser.runtime.MessageSender): Promise<void> {
+  if (sender.tab?.id === undefined) return;
+
+  await browser.scripting
+    .executeScript({
+      target: {
+        tabId: sender.tab.id,
+        ...(sender.frameId === undefined ? {} : { frameIds: [sender.frameId] }),
+      },
+      files: [BAR_SCRIPT_PATH],
+    })
+    .catch(() => undefined);
+}
+
+async function readBarStyles(): Promise<string> {
+  try {
+    const stylesUrl = new URL(BAR_STYLES_PATH, browser.runtime.getURL(BAR_SCRIPT_PATH));
+    const response = await fetch(stylesUrl);
+    return response.ok ? await response.text() : '';
+  } catch {
+    return '';
+  }
 }
 
 async function recordEvent(event: TransformEvent): Promise<void> {

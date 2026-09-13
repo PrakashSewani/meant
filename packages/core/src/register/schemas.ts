@@ -42,6 +42,22 @@ export const StreamEventSchema = z.discriminatedUnion('type', [
 
 export const InvokeMessageSchema = z.object({ type: z.literal('invoke-bar') });
 
+/**
+ * The content script asks the worker to inject the bar bundle into *its* frame. Injection has to
+ * come from the worker: it needs a tab and frame id, and it must land in the isolated world —
+ * never in the page's, where the page could read our payload and our code.
+ */
+export const BarScriptRequestSchema = z.object({ type: z.literal('bar-script') });
+
+/**
+ * The bar's stylesheet travels through the worker rather than being fetched by the injected
+ * script: a page-context fetch of an extension resource needs `web_accessible_resources`, and a
+ * public path is a fingerprint any page could read.
+ */
+export const BarStylesRequestSchema = z.object({ type: z.literal('bar-styles') });
+
+export const BarStylesResponseSchema = z.object({ css: z.string() });
+
 export const PingMessageSchema = z.object({ type: z.literal('sayable-ping') });
 
 export const PingResponseSchema = z.object({ alive: z.literal(true) });

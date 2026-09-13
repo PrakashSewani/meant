@@ -1,3 +1,4 @@
+export * from './bar';
 export * from './brand';
 export * from './events';
 export * from './inference';

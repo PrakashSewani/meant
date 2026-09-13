@@ -1,4 +1,0 @@
-@import 'tailwindcss';
-
-@source "./**/*.{ts,tsx}";
-@source "../../../apps/extension/entrypoints/**/*.{ts,tsx}";

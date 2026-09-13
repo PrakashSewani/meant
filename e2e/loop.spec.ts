@@ -55,6 +55,18 @@ test('the command path reaches one frame, not every frame', async () => {
   await expect(page.locator('sayable-bar')).toHaveCount(1);
 });
 
+test('the bar’s stylesheet is where the bar script looks for it', async () => {
+  const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
+
+  // A silently unstyled bar is exactly the kind of thing unit tests cannot see.
+  const status = await worker.evaluate(async () => {
+    const response = await fetch(chrome.runtime.getURL('assets/bar-styles.css'));
+    return response.status;
+  });
+
+  expect(status).toBe(200);
+});
+
 /**
  * Drives the same path the browser command does: the worker tells the tab to open the bar. The
  * command itself is a browser-level shortcut, which is not ours to test.

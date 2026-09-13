@@ -1,4 +1,4 @@
-export { Bar, BAR_TAG } from './Bar';
+export { Bar } from './Bar';
 export type { BarProps, RecipeChoice } from './Bar';
 export {
   FORMAT_SUGGESTIONS,
