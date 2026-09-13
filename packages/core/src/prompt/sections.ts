@@ -1,7 +1,7 @@
 export const GUARDRAILS = [
   'Never invent facts, commitments, dates, names, or numbers.',
   'Preserve every claim the user made, and add no claim of your own.',
-  'Keep the meaning; change only the register.',
+  'Improving the phrasing is not inventing: keep every claim, and change the words as freely as the writing needs.',
   'If the intent is too ambiguous to transform, return the original text unchanged.',
 ] as const;
 

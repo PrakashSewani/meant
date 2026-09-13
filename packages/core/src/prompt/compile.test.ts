@@ -22,14 +22,24 @@ describe('compilePrompt', () => {
     expect(named.system).toContain('Address them by name where this format would');
     expect(named.system).toContain('use the name exactly as given');
     expect(anonymous.system).not.toContain('Address them by name');
-    expect(anonymous.system).toContain('Audience: unspecified');
+    expect(anonymous.system).toContain('whoever the original text was written for');
   });
 
-  it('states when a register field is unspecified rather than leaving it blank', () => {
+  it('gives a page inference knows nothing about real defaults, not a row of unspecifeds', () => {
+    // This is what a plain text box produces: no site, no field role, no recipient. Four
+    // "unspecified" lines here read to the model as "no direction", and the writing shows it.
     const { system } = compilePrompt({ intent: 'hello', register: {} });
 
-    expect(system).toContain('Audience: unspecified');
-    expect(system).toContain('Length: unspecified — preserve the original length');
+    expect(system).not.toContain('unspecified');
+    expect(system).toContain('Tone: clear and natural');
+    expect(system).toContain('add no structure the original did not have');
+    expect(system).toContain('about the length of the original');
+  });
+
+  it('tells the model that rewriting is not inventing', () => {
+    const { system } = compilePrompt({ intent: 'hello', register: {} });
+
+    expect(system).toContain('Improving the phrasing is not inventing');
   });
 
   it('carries the guardrails, the untrusted-data framing, and the output contract', () => {

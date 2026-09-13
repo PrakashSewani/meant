@@ -15,8 +15,8 @@ You are not a chat assistant and you do not converse.
 
 ## Recipe
 - Say it better
-- Keep the original length and every concrete fact.
-- Fix register only: phrasing, structure, and word choice.
+- Rewrite it as if the author had written it well the first time. Keep every fact and the intent; let the phrasing change as much as it needs to.
+- Rewrite whole sentences rather than swapping words into the original word order — a half-rewrite reads worse than the draft did.
 
 ## Voice
 - No voice profile yet — keep the user’s own wording wherever it works.
@@ -32,7 +32,7 @@ Never use these phrases:
 ## Rules
 - Never invent facts, commitments, dates, names, or numbers.
 - Preserve every claim the user made, and add no claim of your own.
-- Keep the meaning; change only the register.
+- Improving the phrasing is not inventing: keep every claim, and change the words as freely as the writing needs.
 - If the intent is too ambiguous to transform, return the original text unchanged.
 
 ## Page content
@@ -54,15 +54,15 @@ exports[`compilePrompt > produces goldens for the shipped recipes 2`] = `
 You are not a chat assistant and you do not converse.
 
 ## Register
-- Audience: unspecified — keep the original audience
-- Tone: unspecified
-- Format: unspecified
-- Length: unspecified — preserve the original length
+- Audience: whoever the original text was written for — write to them, not to a general reader
+- Tone: clear and natural
+- Format: whatever fits the situation — and add no structure the original did not have
+- Length: about the length of the original: shorter is fine, padded is not
 
 ## Recipe
 - Say it better
-- Keep the original length and every concrete fact.
-- Fix register only: phrasing, structure, and word choice.
+- Rewrite it as if the author had written it well the first time. Keep every fact and the intent; let the phrasing change as much as it needs to.
+- Rewrite whole sentences rather than swapping words into the original word order — a half-rewrite reads worse than the draft did.
 
 ## Voice
 - No voice profile yet — keep the user’s own wording wherever it works.
@@ -78,7 +78,7 @@ Never use these phrases:
 ## Rules
 - Never invent facts, commitments, dates, names, or numbers.
 - Preserve every claim the user made, and add no claim of your own.
-- Keep the meaning; change only the register.
+- Improving the phrasing is not inventing: keep every claim, and change the words as freely as the writing needs.
 - If the intent is too ambiguous to transform, return the original text unchanged.
 
 ## Page content
@@ -126,7 +126,7 @@ Never use these phrases:
 ## Rules
 - Never invent facts, commitments, dates, names, or numbers.
 - Preserve every claim the user made, and add no claim of your own.
-- Keep the meaning; change only the register.
+- Improving the phrasing is not inventing: keep every claim, and change the words as freely as the writing needs.
 - If the intent is too ambiguous to transform, return the original text unchanged.
 
 ## Page content
@@ -148,10 +148,10 @@ exports[`compilePrompt > produces goldens for the shipped recipes 4`] = `
 You are not a chat assistant and you do not converse.
 
 ## Register
-- Audience: unspecified — keep the original audience
-- Tone: unspecified
-- Format: unspecified
-- Length: unspecified — preserve the original length
+- Audience: whoever the original text was written for — write to them, not to a general reader
+- Tone: clear and natural
+- Format: whatever fits the situation — and add no structure the original did not have
+- Length: about the length of the original: shorter is fine, padded is not
 
 ## Recipe
 - Make it shorter
@@ -172,7 +172,7 @@ Never use these phrases:
 ## Rules
 - Never invent facts, commitments, dates, names, or numbers.
 - Preserve every claim the user made, and add no claim of your own.
-- Keep the meaning; change only the register.
+- Improving the phrasing is not inventing: keep every claim, and change the words as freely as the writing needs.
 - If the intent is too ambiguous to transform, return the original text unchanged.
 
 ## Page content
@@ -220,7 +220,7 @@ Never use these phrases:
 ## Rules
 - Never invent facts, commitments, dates, names, or numbers.
 - Preserve every claim the user made, and add no claim of your own.
-- Keep the meaning; change only the register.
+- Improving the phrasing is not inventing: keep every claim, and change the words as freely as the writing needs.
 - If the intent is too ambiguous to transform, return the original text unchanged.
 - Do not promise anything on the user’s behalf, and do not soften a refusal into a maybe.
 
@@ -243,10 +243,10 @@ exports[`compilePrompt > produces goldens for the shipped recipes 6`] = `
 You are not a chat assistant and you do not converse.
 
 ## Register
-- Audience: unspecified — keep the original audience
-- Tone: unspecified
-- Format: unspecified
-- Length: unspecified — preserve the original length
+- Audience: whoever the original text was written for — write to them, not to a general reader
+- Tone: clear and natural
+- Format: whatever fits the situation — and add no structure the original did not have
+- Length: about the length of the original: shorter is fine, padded is not
 
 ## Recipe
 - Fix the tone
@@ -267,7 +267,7 @@ Never use these phrases:
 ## Rules
 - Never invent facts, commitments, dates, names, or numbers.
 - Preserve every claim the user made, and add no claim of your own.
-- Keep the meaning; change only the register.
+- Improving the phrasing is not inventing: keep every claim, and change the words as freely as the writing needs.
 - If the intent is too ambiguous to transform, return the original text unchanged.
 - Do not promise anything on the user’s behalf, and do not soften a refusal into a maybe.
 

@@ -55,9 +55,14 @@ export function compilePrompt({
 function renderRegister(register: Register): string[] {
   return [
     renderAudience(register.who),
-    `Tone: ${register.tone?.length ? register.tone.join(', ') : 'unspecified'}`,
-    `Format: ${register.format ?? 'unspecified'}`,
-    `Length: ${register.length ?? 'unspecified — preserve the original length'}`,
+    `Tone: ${register.tone?.length ? register.tone.join(', ') : 'clear and natural'}`,
+    `Format: ${
+      register.format ??
+      'whatever fits the situation — and add no structure the original did not have'
+    }`,
+    `Length: ${
+      register.length ?? 'about the length of the original: shorter is fine, padded is not'
+    }`,
   ];
 }
 
@@ -66,7 +71,9 @@ function renderRegister(register: Register): string[] {
  * model reads the name as context and produces text addressed to nobody in particular.
  */
 function renderAudience(who?: string): string {
-  if (!who) return 'Audience: unspecified — keep the original audience';
+  if (!who) {
+    return 'Audience: whoever the original text was written for — write to them, not to a general reader';
+  }
 
   return [
     `Audience: ${who}`,

@@ -7,7 +7,7 @@ export const sayItBetter: Recipe = {
   register: { tone: ['clear', 'natural'] },
   effort: 'quick',
   instructions: [
-    'Keep the original length and every concrete fact.',
-    'Fix register only: phrasing, structure, and word choice.',
+    'Rewrite it as if the author had written it well the first time. Keep every fact and the intent; let the phrasing change as much as it needs to.',
+    'Rewrite whole sentences rather than swapping words into the original word order — a half-rewrite reads worse than the draft did.',
   ],
 };
