@@ -1,7 +1,15 @@
-import { useState } from 'react';
-import type { Effort, Register } from '@sayable/core';
+import { useEffect, useState } from 'react';
+import type { Effort, Length, Register } from '@sayable/core';
+import {
+  FORMAT_SUGGESTIONS,
+  TONE_SUGGESTIONS,
+  formatTones,
+  parseTones,
+  parseWho,
+} from './register-input';
 
 const EFFORTS: readonly Effort[] = ['quick', 'balanced', 'deep'];
+const LENGTHS: readonly Length[] = ['short', 'medium', 'long'];
 
 export interface BarProps {
   inferredLine: string;
@@ -9,6 +17,7 @@ export interface BarProps {
   effort: Effort;
   result?: string;
   errorMessage?: string;
+  onRegisterChange?: (register: Register) => void;
   onEffortChange?: (effort: Effort) => void;
   onAccept?: () => void;
   onDismiss?: () => void;
@@ -20,11 +29,16 @@ export function Bar({
   effort,
   result,
   errorMessage,
+  onRegisterChange,
   onEffortChange,
   onAccept,
   onDismiss,
 }: BarProps) {
   const [expanded, setExpanded] = useState(false);
+
+  function change(patch: Partial<Register>) {
+    onRegisterChange?.({ ...register, ...patch });
+  }
 
   return (
     <div
@@ -51,23 +65,55 @@ export function Bar({
           disabled={!result}
           className="rounded-md bg-neutral-900 px-2 py-1 text-xs font-medium text-white disabled:opacity-40"
         >
-          Keep
+          Accept
         </button>
         <button
           type="button"
           onClick={onDismiss}
           className="rounded-md px-2 py-1 text-xs text-neutral-500"
         >
-          Undo
+          Dismiss
         </button>
       </div>
 
       {expanded ? (
-        <div className="flex flex-wrap gap-2 border-t border-neutral-100 px-3 py-2">
-          <Chip label="Who" value={register.who} />
-          <Chip label="Tone" value={register.tone?.join(', ')} />
-          <Chip label="As" value={register.format} />
-          <Chip label="Length" value={register.length} />
+        <div className="grid grid-cols-2 gap-2 border-t border-neutral-100 px-3 py-2">
+          <ChipInput
+            label="Who"
+            value={register.who ?? ''}
+            placeholder="Who?"
+            onCommit={(value) => change({ who: parseWho(value) })}
+          />
+          <ChipInput
+            label="Tone"
+            value={formatTones(register.tone)}
+            placeholder="direct, warm"
+            list={TONE_SUGGESTIONS}
+            onCommit={(value) => change({ tone: parseTones(value) })}
+          />
+          <ChipInput
+            label="As"
+            value={register.format ?? ''}
+            placeholder="reply"
+            list={FORMAT_SUGGESTIONS}
+            onCommit={(value) => change({ format: parseWho(value) })}
+          />
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-neutral-500">Length</span>
+            {LENGTHS.map((value) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={value === register.length}
+                onClick={() => change({ length: value === register.length ? undefined : value })}
+                className={`rounded-md px-2 py-1 text-xs capitalize ${
+                  value === register.length ? 'bg-neutral-900 text-white' : 'text-neutral-600'
+                }`}
+              >
+                {value}
+              </button>
+            ))}
+          </div>
         </div>
       ) : null}
 
@@ -105,10 +151,51 @@ export function Bar({
   );
 }
 
-function Chip({ label, value }: { label: string; value?: string }) {
+interface ChipInputProps {
+  label: string;
+  value: string;
+  placeholder: string;
+  list?: readonly string[];
+  onCommit: (value: string) => void;
+}
+
+/**
+ * Text chips commit on blur or Enter rather than on every keystroke: a commit re-runs the
+ * transform, and a transform per character is not a product.
+ */
+function ChipInput({ label, value, placeholder, list, onCommit }: ChipInputProps) {
+  const [draft, setDraft] = useState(value);
+
+  useEffect(() => setDraft(value), [value]);
+
+  function commit() {
+    if (draft !== value) onCommit(draft);
+  }
+
+  const listId = list ? `sayable-${label.toLowerCase()}-options` : undefined;
+
   return (
-    <span className="rounded-md border border-neutral-200 px-2 py-1 text-xs">
-      <span className="text-neutral-500">{label}</span> <span>{value ?? 'guessing'}</span>
-    </span>
+    <label className="flex items-center gap-2">
+      <span className="text-xs text-neutral-500">{label}</span>
+      <input
+        value={draft}
+        list={listId}
+        placeholder={placeholder}
+        onChange={(event) => setDraft(event.target.value)}
+        onBlur={commit}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') commit();
+          if (event.key === 'Escape') setDraft(value);
+        }}
+        className="w-full rounded-md border border-neutral-200 px-2 py-1 text-xs"
+      />
+      {listId ? (
+        <datalist id={listId}>
+          {list?.map((option) => (
+            <option key={option} value={option} />
+          ))}
+        </datalist>
+      ) : null}
+    </label>
   );
 }

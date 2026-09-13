@@ -130,7 +130,7 @@ Rules for the bar:
    ┌───────────────────────────────────────────────────────────┐
    │  ~ I can't make tomorrow's standup — the deploy slipped    │
    │    a day. It's on us and we're on it; you'll have a fix    │
-   │    by EOD.                        [Keep] [Undo]        │
+   │    by EOD.                   [Accept] [Dismiss]        │
    ├───────────────────────────────────────────────────────────┤
    │  Shorter · Softer · More formal · Add a next step · ↻      │
    └───────────────────────────────────────────────────────────┘

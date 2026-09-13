@@ -117,7 +117,8 @@ interface BarHostProps {
   onDismiss: () => void;
 }
 
-function BarHost({ hints, register, intentText, onAccept, onDismiss }: BarHostProps) {
+function BarHost({ hints, register: inferred, intentText, onAccept, onDismiss }: BarHostProps) {
+  const [register, setRegister] = useState(inferred);
   const [effort, setEffort] = useState<Effort>('quick');
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState('');
@@ -152,6 +153,12 @@ function BarHost({ hints, register, intentText, onAccept, onDismiss }: BarHostPr
     };
   }, [attempt, effort, intentText, register]);
 
+  function rerun() {
+    setResult('');
+    setErrorMessage(undefined);
+    setAttempt((current) => current + 1);
+  }
+
   return (
     <Bar
       inferredLine={inferredLine(hints, register)}
@@ -159,11 +166,13 @@ function BarHost({ hints, register, intentText, onAccept, onDismiss }: BarHostPr
       effort={effort}
       result={result || undefined}
       errorMessage={errorMessage}
+      onRegisterChange={(next) => {
+        setRegister(next);
+        rerun();
+      }}
       onEffortChange={(value) => {
-        setResult('');
-        setErrorMessage(undefined);
         setEffort(value);
-        setAttempt((current) => current + 1);
+        rerun();
       }}
       onAccept={() => onAccept(result)}
       onDismiss={onDismiss}
