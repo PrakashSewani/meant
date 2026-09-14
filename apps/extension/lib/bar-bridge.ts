@@ -13,6 +13,8 @@ export interface BarHostRequest {
   /** Chips that came from what the user keeps correcting here. */
   learned: readonly string[];
   intentText: string;
+  /** Resolved from the theme setting: a class on the host would not cross the shadow boundary. */
+  dark: boolean;
   onState: (state: BarState) => void;
   onAccept: (text: string) => void;
   onDismiss: () => void;

@@ -41,6 +41,8 @@ pnpm --filter @meant/extension build
       bring the deleted one back.
 - [ ] The bar's chips, the recipe dropdown and the result block are all visibly bordered, and
       `Tab` through the bar shows a focus ring on whatever has focus.
+- [ ] The theme switch (System · Light · Dark) is in the options header and the popup. Dark is a
+      real dark, and the bar follows it on the next invoke — including on a bright page.
       **Result:**
 
 ## 1. The fast path

@@ -134,6 +134,53 @@ test('look at the bar', async () => {
     await third.keyboard.press('Enter');
     await expect(thirdBar).toHaveAttribute('data-state', 'error');
     await third.screenshot({ path: join(SHOTS, '9-error.png') });
+
+    // Dark, on both surfaces. The bar is read per invoke, so this needs a fresh one.
+    await worker.evaluate(async () => {
+      await chrome.storage.local.clear();
+      await chrome.storage.local.set({
+        'meant.configs': {
+          fixture: {
+            name: 'Fixture endpoint',
+            config: {
+              model: 'fixture/fixture-model',
+              provider: {
+                fixture: {
+                  npm: '@ai-sdk/openai-compatible',
+                  name: 'Fixture',
+                  options: { baseURL: 'http://localhost:3123/v1' },
+                  models: { 'fixture-model': { name: 'fixture-model' } },
+                },
+              },
+            },
+          },
+        },
+        'meant.activeConfig': 'fixture',
+        'meant.secrets': { fixture: 'sk-fixture' },
+        'meant.theme': 'dark',
+      });
+    });
+
+    const dark = await context.newPage();
+    await dark.goto(FIXTURE);
+    await dark.locator('#plain').selectText();
+    await invokeActiveTab(worker);
+
+    const darkBar = dark.locator('meant-bar');
+    await expect(darkBar).toHaveAttribute('data-state', 'idle');
+    await dark.screenshot({ path: join(SHOTS, '10-bar-dark.png') });
+
+    await dark.keyboard.press('Enter');
+    await expect(darkBar).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
+    await dark.screenshot({ path: join(SHOTS, '11-bar-dark-result.png') });
+
+    await dark.goto(`chrome-extension://${extensionId}/options.html`);
+    await dark.waitForTimeout(400);
+    await dark.screenshot({ path: join(SHOTS, '12-options-dark.png'), fullPage: true });
+
+    await dark.goto(`chrome-extension://${extensionId}/popup.html`);
+    await dark.waitForTimeout(400);
+    await dark.screenshot({ path: join(SHOTS, '13-popup-dark.png') });
   } finally {
     await context.close();
   }

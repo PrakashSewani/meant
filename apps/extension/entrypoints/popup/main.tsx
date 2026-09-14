@@ -1,6 +1,16 @@
 import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Mark } from '@meant/ui';
+import {
+  Mark,
+  THEME_KEY,
+  ThemeSwitch,
+  applyTheme,
+  isDark,
+  readTheme,
+  systemPrefersDark,
+  watchSystemTheme,
+  type Theme,
+} from '@meant/ui';
 import '@/lib/app.css';
 import {
   BRAND,
@@ -44,10 +54,34 @@ function Popup() {
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string>();
   const [summary, setSummary] = useState<EventSummary>();
+  const [theme, setTheme] = useState<Theme>('system');
 
   useEffect(() => {
     void readStatus();
   }, []);
+
+  useEffect(() => {
+    const paint = (chosen: Theme) =>
+      applyTheme(document.documentElement, isDark(chosen, systemPrefersDark()));
+    paint(theme);
+
+    return theme === 'system' ? watchSystemTheme(() => paint('system')) : undefined;
+  }, [theme]);
+
+  useEffect(() => {
+    function onChanged(changes: Record<string, { newValue?: unknown }>) {
+      const next = changes[THEME_KEY];
+      if (next) setTheme(readTheme(next.newValue));
+    }
+
+    browser.storage.onChanged.addListener(onChanged);
+    return () => browser.storage.onChanged.removeListener(onChanged);
+  }, []);
+
+  async function chooseTheme(next: Theme) {
+    setTheme(next);
+    await browser.storage.local.set({ [THEME_KEY]: next });
+  }
 
   async function readStatus() {
     const stored = await browser.storage.local.get([
@@ -56,7 +90,9 @@ function Popup() {
       LEGACY_CONFIG_KEY,
       SECRETS_KEY,
       EVENTS_KEY,
+      THEME_KEY,
     ]);
+    setTheme(readTheme(stored[THEME_KEY]));
     const active = readActiveConfig(stored);
 
     if (active.ok && active.config.model) {
@@ -198,34 +234,39 @@ function Popup() {
   }
 
   return (
-    <main className="w-72 p-4 text-sm text-neutral-800">
+    <main className="w-80 bg-white p-4 text-sm text-neutral-800 dark:bg-neutral-950 dark:text-neutral-100">
       <div className="flex items-center gap-2">
-        <Mark size={22} className="text-neutral-900" />
+        <Mark size={22} className="text-neutral-900 dark:text-neutral-100" />
         <h1 className="text-base font-medium">{BRAND.name}</h1>
+        <ThemeSwitch
+          className="ml-auto"
+          theme={theme}
+          onChange={(next) => void chooseTheme(next)}
+        />
       </div>
-      <p className="mt-1 text-xs text-neutral-500">{BRAND.tagline}</p>
+      <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{BRAND.tagline}</p>
 
       <dl className="mt-3 space-y-1 text-xs">
         <div className="flex justify-between gap-2">
-          <dt className="text-neutral-500">Config</dt>
+          <dt className="text-neutral-500 dark:text-neutral-400">Config</dt>
           <dd className="truncate">{configName ?? (model ? 'not saved' : 'none')}</dd>
         </div>
         <div className="flex justify-between gap-2">
-          <dt className="text-neutral-500">Model</dt>
+          <dt className="text-neutral-500 dark:text-neutral-400">Model</dt>
           <dd className="truncate">{model ?? 'not configured'}</dd>
         </div>
         <div className="flex justify-between gap-2">
-          <dt className="text-neutral-500">Key</dt>
+          <dt className="text-neutral-500 dark:text-neutral-400">Key</dt>
           <dd>{hasKey ? 'saved' : 'missing'}</dd>
         </div>
         <div className="flex justify-between gap-2">
-          <dt className="text-neutral-500">Shortcut</dt>
+          <dt className="text-neutral-500 dark:text-neutral-400">Shortcut</dt>
           <dd>{shortcut}</dd>
         </div>
       </dl>
 
       {shortcut === 'unassigned' ? (
-        <p className="mt-3 text-xs text-neutral-600">
+        <p className="mt-3 text-xs text-neutral-600 dark:text-neutral-300">
           Chrome left the shortcut unassigned — something else owns it. Set one at{' '}
           <span className="select-all">chrome://extensions/shortcuts</span>, or right-click any text
           box and pick {BRAND.name}.
@@ -233,29 +274,33 @@ function Popup() {
       ) : null}
 
       {!hasKey || !model ? (
-        <p className="mt-3 text-xs text-neutral-600">
+        <p className="mt-3 text-xs text-neutral-600 dark:text-neutral-300">
           Add a key or run a local model — takes a minute.
         </p>
       ) : null}
 
-      <section className="mt-4 rounded-lg border border-neutral-200 p-3">
+      <section className="mt-4 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-xs text-neutral-500">
+          <span className="text-xs text-neutral-500 dark:text-neutral-400">
             {tab?.host ? `On ${tab.host}` : 'This page'}
           </span>
           <span className="text-xs">{here ? 'on' : 'off'}</span>
         </div>
 
         {!tab ? (
-          <p className="mt-2 text-xs text-neutral-500">This page cannot be enabled.</p>
+          <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+            This page cannot be enabled.
+          </p>
         ) : tab.origin && isCuratedHost(tab.host ?? '') ? (
-          <p className="mt-2 text-xs text-neutral-500">Always available here.</p>
+          <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+            Always available here.
+          </p>
         ) : (
           <button
             type="button"
             disabled={busy}
             onClick={() => void (here ? disableHere() : enableHere())}
-            className="mt-2 w-full rounded-md border border-neutral-300 px-3 py-2 text-xs font-medium disabled:opacity-50"
+            className="mt-2 w-full rounded-md border border-neutral-300 px-3 py-2 text-xs font-medium transition-colors hover:border-neutral-400 disabled:opacity-50 dark:border-neutral-700 dark:hover:border-neutral-500"
           >
             {here ? 'Turn off here' : 'Enable on this site'}
           </button>
@@ -265,23 +310,27 @@ function Popup() {
           type="button"
           disabled={busy}
           onClick={() => void (everywhere ? disableEverywhere() : enableEverywhere())}
-          className="mt-2 w-full rounded-md bg-neutral-900 px-3 py-2 text-xs font-medium text-white disabled:opacity-50"
+          className="mt-2 w-full rounded-md bg-neutral-900 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-neutral-700 disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
         >
           {everywhere ? 'Turn off on all sites' : 'Enable on all sites'}
         </button>
-        <p className="mt-2 text-xs text-neutral-500">
+        <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
           {everywhere
             ? 'Working everywhere you browse. Revoke it here whenever you want.'
             : 'Asks once for access to the sites you visit, instead of enabling them one at a time.'}
         </p>
 
-        {note ? <p className="mt-2 text-xs text-neutral-600">{note}</p> : null}
+        {note ? (
+          <p className="mt-2 text-xs text-neutral-600 dark:text-neutral-300">{note}</p>
+        ) : null}
       </section>
 
       {summary && summary.shown > 0 ? (
-        <section className="mt-4 rounded-lg border border-neutral-200 p-3">
+        <section className="mt-4 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs text-neutral-500">Accepted this week</span>
+            <span className="text-xs text-neutral-500 dark:text-neutral-400">
+              Accepted this week
+            </span>
             <span className="text-xs">
               {summary.accepted} of {summary.shown}
               {summary.acceptRate !== undefined
@@ -290,11 +339,13 @@ function Popup() {
             </span>
           </div>
           <div className="mt-1 flex items-center justify-between gap-2">
-            <span className="text-xs text-neutral-400">On this device, never sent.</span>
+            <span className="text-xs text-neutral-400 dark:text-neutral-500">
+              On this device, never sent.
+            </span>
             <button
               type="button"
               onClick={() => void clearEvents()}
-              className="text-xs text-neutral-500 underline"
+              className="text-xs text-neutral-500 underline dark:text-neutral-400"
             >
               Clear
             </button>
@@ -305,7 +356,7 @@ function Popup() {
       <button
         type="button"
         onClick={() => browser.runtime.openOptionsPage()}
-        className="mt-4 w-full rounded-md bg-neutral-900 px-3 py-2 text-xs font-medium text-white"
+        className="mt-4 w-full rounded-md bg-neutral-900 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
       >
         Open settings
       </button>

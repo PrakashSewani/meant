@@ -1,6 +1,16 @@
 import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Mark } from '@meant/ui';
+import {
+  Mark,
+  THEME_KEY,
+  ThemeSwitch,
+  applyTheme,
+  isDark,
+  readTheme,
+  systemPrefersDark,
+  watchSystemTheme,
+  type Theme,
+} from '@meant/ui';
 import { ConfigMenu, type NewConfigDraft } from '@meant/ui/config';
 import {
   DoctorReportSchema,
@@ -51,17 +61,39 @@ function Options() {
   const [status, setStatus] = useState<string>();
   const [busy, setBusy] = useState(false);
   const [report, setReport] = useState<DoctorReport>();
+  const [theme, setTheme] = useState<Theme>('system');
 
   useEffect(() => {
     void start();
   }, []);
 
+  // `system` follows the OS as it changes; the other two ignore it.
+  useEffect(() => {
+    const paint = (chosen: Theme) =>
+      applyTheme(document.documentElement, isDark(chosen, systemPrefersDark()));
+    paint(theme);
+
+    return theme === 'system' ? watchSystemTheme(() => paint('system')) : undefined;
+  }, [theme]);
+
+  // The popup can change the theme too, and this page should not sit there disagreeing with it.
+  useEffect(() => {
+    function onChanged(changes: Record<string, { newValue?: unknown }>) {
+      const next = changes[THEME_KEY];
+      if (next) setTheme(readTheme(next.newValue));
+    }
+
+    browser.storage.onChanged.addListener(onChanged);
+    return () => browser.storage.onChanged.removeListener(onChanged);
+  }, []);
+
   async function start() {
     // A config saved before the library existed is adopted once, so the menu shows what is
     // already working instead of an empty page.
-    const before = await browser.storage.local.get([CONFIGS_KEY, LEGACY_CONFIG_KEY]);
-    const adopted = adoptLegacyConfig(before);
+    const before = await browser.storage.local.get([CONFIGS_KEY, LEGACY_CONFIG_KEY, THEME_KEY]);
+    setTheme(readTheme(before[THEME_KEY]));
 
+    const adopted = adoptLegacyConfig(before);
     if (adopted) {
       await browser.storage.local.set({
         [CONFIGS_KEY]: adopted.configs,
@@ -71,6 +103,11 @@ function Options() {
     }
 
     await refresh();
+  }
+
+  async function chooseTheme(next: Theme) {
+    setTheme(next);
+    await browser.storage.local.set({ [THEME_KEY]: next });
   }
 
   async function refresh(): Promise<Stored> {
@@ -238,13 +275,18 @@ function Options() {
   }
 
   return (
-    <main className="min-h-screen bg-neutral-100 px-6 py-10 text-sm text-neutral-800">
-      <div className="mx-auto max-w-2xl">
-        <div className="flex items-center gap-3">
-          <Mark size={30} className="text-neutral-900" />
+    <main className="min-h-screen bg-neutral-100 px-6 py-10 text-sm text-neutral-800 dark:bg-neutral-950 dark:text-neutral-100">
+      <div className="mx-auto max-w-5xl">
+        <div className="flex flex-wrap items-center gap-3">
+          <Mark size={30} className="text-neutral-900 dark:text-neutral-100" />
           <h1 className="text-xl font-semibold tracking-tight">Meant settings</h1>
+          <ThemeSwitch
+            className="ml-auto"
+            theme={theme}
+            onChange={(next) => void chooseTheme(next)}
+          />
         </div>
-        <p className="mt-1 text-xs text-neutral-500">
+        <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
           Your keys and configs stay in this browser profile. Nothing is sent anywhere except the
           provider you pick.
         </p>
@@ -268,21 +310,40 @@ function Options() {
         </div>
 
         {report ? (
-          <section className="mt-6 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-            <h2 className="text-xs font-medium tracking-wide text-neutral-500 uppercase">
+          <section className="mt-6 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+            <h2 className="text-xs font-medium tracking-wide text-neutral-500 uppercase dark:text-neutral-400">
               The live config
             </h2>
-            <p className={`mt-1 text-xs ${report.ok ? 'text-neutral-600' : 'text-neutral-800'}`}>
+            <p
+              className={`mt-1 text-xs ${
+                report.ok
+                  ? 'text-neutral-600 dark:text-neutral-300'
+                  : 'text-neutral-800 dark:text-neutral-100'
+              }`}
+            >
               {report.message}
             </p>
             <ul className="mt-3 space-y-1">
               {report.checks.map((check) => (
                 <li key={check.label} className="flex gap-2 text-xs">
-                  <span aria-hidden className={check.ok ? 'text-neutral-500' : 'text-red-700'}>
+                  <span
+                    aria-hidden
+                    className={
+                      check.ok
+                        ? 'text-neutral-500 dark:text-neutral-400'
+                        : 'text-red-700 dark:text-red-300'
+                    }
+                  >
                     {check.ok ? '✓' : '✗'}
                   </span>
-                  <span className="text-neutral-500">{check.label}</span>
-                  <span className={check.ok ? 'text-neutral-500' : 'text-red-700'}>
+                  <span className="text-neutral-500 dark:text-neutral-400">{check.label}</span>
+                  <span
+                    className={
+                      check.ok
+                        ? 'text-neutral-500 dark:text-neutral-400'
+                        : 'text-red-700 dark:text-red-300'
+                    }
+                  >
                     {check.ok ? '' : check.message}
                   </span>
                 </li>
@@ -292,11 +353,11 @@ function Options() {
         ) : null}
 
         {Object.keys(priors).length > 0 ? (
-          <section className="mt-6 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-            <h2 className="text-xs font-medium tracking-wide text-neutral-500 uppercase">
+          <section className="mt-6 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+            <h2 className="text-xs font-medium tracking-wide text-neutral-500 uppercase dark:text-neutral-400">
               What it has learned
             </h2>
-            <p className="mt-1 text-xs text-neutral-500">
+            <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
               Corrections you keep making in the same place, applied next time. Stored on this
               device, and forgettable one chip at a time.
             </p>
@@ -307,7 +368,7 @@ function Options() {
                     key={`${key}:${chip}`}
                     className="flex items-center justify-between gap-3 text-xs"
                   >
-                    <span className="text-neutral-500">
+                    <span className="text-neutral-500 dark:text-neutral-400">
                       {key} · {chip}
                     </span>
                     <span className="flex-1 truncate font-mono">
@@ -316,7 +377,7 @@ function Options() {
                     <button
                       type="button"
                       onClick={() => void forget(key, chip as ChipKey)}
-                      className="text-neutral-500 underline"
+                      className="text-neutral-500 underline dark:text-neutral-400"
                     >
                       Forget
                     </button>

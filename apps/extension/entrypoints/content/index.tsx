@@ -11,6 +11,7 @@ import {
   resolveRegister,
 } from '@meant/core';
 import { barMount } from '../../lib/bar-bridge';
+import { THEME_KEY, isDark, readTheme, systemPrefersDark } from '@meant/ui/theme';
 import type { BarAnchor } from '@meant/ui';
 
 const PRIORS_KEY = 'meant.priors';
@@ -81,7 +82,7 @@ async function openBar(adapter: ReturnType<typeof adapterFor>): Promise<void> {
   };
 
   const hints = adapter.inferContext(element);
-  const stored = await browser.storage.local.get(PRIORS_KEY);
+  const stored = await browser.storage.local.get([PRIORS_KEY, THEME_KEY]);
   const learned = learnedRegister(
     readPriors(stored[PRIORS_KEY]),
     priorKey(hints.siteId ?? 'page', hints.fieldRole),
@@ -96,6 +97,7 @@ async function openBar(adapter: ReturnType<typeof adapterFor>): Promise<void> {
     register: { ...resolveRegister({ hints }), ...learned.register },
     learned: learned.learned,
     intentText,
+    dark: isDark(readTheme(stored[THEME_KEY]), systemPrefersDark()),
     onState: (state) => {
       host.dataset.state = state;
     },

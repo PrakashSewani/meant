@@ -17,13 +17,16 @@ const PORT_NAME = 'meant-transform';
 const DEFAULT_RECIPE_ID = 'say-it-better';
 const RECIPE_CHOICES = RECIPES.map(({ id, label }) => ({ id, label }));
 
-export const mountBar: BarMount = ({ shadow, styles, ...request }) => {
+export const mountBar: BarMount = ({ shadow, styles, dark, ...request }) => {
   // The styles live inside the shadow root rather than on the page, so nothing leaks into the host.
   const style = document.createElement('style');
   style.textContent = styles;
   shadow.append(style);
 
   const container = document.createElement('div');
+  // The theme goes on the element inside the shadow root: `dark:` is a descendant selector, and a
+  // class on the host does not cross the boundary.
+  container.classList.toggle('dark', dark);
   shadow.append(container);
 
   const root = createRoot(container);
@@ -50,7 +53,7 @@ function BarHost({
   onState,
   onAccept,
   onDismiss,
-}: Omit<BarHostRequest, 'shadow' | 'styles'>) {
+}: Omit<BarHostRequest, 'shadow' | 'styles' | 'dark'>) {
   const [intent, setIntent] = useState(intentText);
   const [original, setOriginal] = useState(intentText);
   const [refinements, setRefinements] = useState<readonly string[]>([]);

@@ -154,19 +154,20 @@ interface ResolvedModel {
 
 ## 5. Storage
 
-| Key                      | Contents                                                      | Notes                                                                                                           |
-| ------------------------ | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `meant.configs`          | Saved configs: a name and a provider config per entry         | The library. No secrets. One is live at a time.                                                                 |
-| `meant.activeConfig`     | Which library entry is live                                   | Points into `meant.configs`.                                                                                    |
-| `meant.config`           | Provider config (OpenCode subset)                             | Read as a fallback for a config saved before the library existed, and removed once adopted. No secrets.         |
-| `meant.secrets`          | API keys                                                      | Encrypted with AES-GCM + PBKDF2 if a passphrase is set; otherwise OS-protected extension storage. Never synced. |
-| `meant.voice`            | Learned Voice profile                                         | Local only, never sent except inside a prompt.                                                                  |
-| `meant.recipes`          | User recipes                                                  | Local; importable/exportable as JSON.                                                                           |
-| `meant.sites`            | Per-site opt-ins (grip, context sharing)                      | User-controlled, revocable.                                                                                     |
-| `meant.priors`           | Register memory: chip corrections per surface + field role    | Local, capped, wipeable, never synced. Applied priors are visible in the chip and resettable.                   |
-| `meant.history`          | Last N transforms (opt-in, default off)                       | Local, capped, wipeable.                                                                                        |
-| `meant.events`           | Transform metadata: register sent, corrections, accepted flag | Local, capped at 200, wipeable from the popup. **No text content, ever.**                                       |
-| `chrome.storage.session` | Unlocked vault keys                                           | Memory-only, cleared on browser restart, never visible to content scripts.                                      |
+| Key                      | Contents                                                      | Notes                                                                                                            |
+| ------------------------ | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `meant.configs`          | Saved configs: a name and a provider config per entry         | The library. No secrets. One is live at a time.                                                                  |
+| `meant.activeConfig`     | Which library entry is live                                   | Points into `meant.configs`.                                                                                     |
+| `meant.config`           | Provider config (OpenCode subset)                             | Read as a fallback for a config saved before the library existed, and removed once adopted. No secrets.          |
+| `meant.secrets`          | API keys                                                      | Encrypted with AES-GCM + PBKDF2 if a passphrase is set; otherwise OS-protected extension storage. Never synced.  |
+| `meant.voice`            | Learned Voice profile                                         | Local only, never sent except inside a prompt.                                                                   |
+| `meant.recipes`          | User recipes                                                  | Local; importable/exportable as JSON.                                                                            |
+| `meant.sites`            | Per-site opt-ins (grip, context sharing)                      | User-controlled, revocable.                                                                                      |
+| `meant.priors`           | Register memory: chip corrections per surface + field role    | Local, capped, wipeable, never synced. Applied priors are visible in the chip and resettable.                    |
+| `meant.history`          | Last N transforms (opt-in, default off)                       | Local, capped, wipeable.                                                                                         |
+| `meant.events`           | Transform metadata: register sent, corrections, accepted flag | Local, capped at 200, wipeable from the popup. **No text content, ever.**                                        |
+| `meant.theme`            | `system`, `light`, or `dark`                                  | The user's choice rather than the OS's: `dark:` follows a class the surface sets, and `system` resolves into it. |
+| `chrome.storage.session` | Unlocked vault keys                                           | Memory-only, cleared on browser restart, never visible to content scripts.                                       |
 
 `chrome.storage.sync` is used **only** for non-sensitive prefs (theme, shortcut). Secrets and
 Voice never sync in plaintext. If a future accounts tier ships, cross-device sync must be

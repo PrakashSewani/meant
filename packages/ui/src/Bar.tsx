@@ -225,10 +225,10 @@ export function Bar({
       aria-label="Meant"
       tabIndex={-1}
       style={{ left: placement?.left, top: placement?.top }}
-      className="meant-bar fixed z-[2147483647] w-max min-w-[22rem] max-w-[27rem] overflow-hidden rounded-xl border border-neutral-200 bg-white font-sans text-[13px] text-neutral-900 shadow-2xl ring-1 ring-black/5 outline-none"
+      className="meant-bar fixed z-[2147483647] w-max min-w-[22rem] max-w-[27rem] overflow-hidden rounded-xl border border-neutral-200 bg-white font-sans text-[13px] text-neutral-900 shadow-2xl ring-1 ring-black/5 outline-none dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100 dark:ring-white/10"
     >
-      <div className="flex items-center gap-2 bg-neutral-50 px-3 pt-2.5 pb-2">
-        <span aria-hidden className="text-neutral-300">
+      <div className="flex items-center gap-2 bg-neutral-50 px-3 pt-2.5 pb-2 dark:bg-neutral-950">
+        <span aria-hidden className="text-neutral-300 dark:text-neutral-600">
           ✦
         </span>
         {/* A dropdown has to look like one: the native arrow is transparent in too many themes. */}
@@ -237,7 +237,7 @@ export function Bar({
             value={recipeId}
             aria-label="Transform"
             onChange={(event) => onRecipeChange?.(event.target.value)}
-            className={`max-w-[12rem] cursor-pointer appearance-none truncate rounded-md border border-neutral-200 bg-white py-1 pl-2 pr-6 font-medium text-neutral-900 transition-colors hover:border-neutral-300 ${RING}`}
+            className={`max-w-[12rem] cursor-pointer appearance-none truncate rounded-md border border-neutral-200 bg-white py-1 pr-6 pl-2 font-medium text-neutral-900 transition-colors hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:border-neutral-600 ${RING}`}
           >
             {recipes.map((recipe) => (
               <option key={recipe.id} value={recipe.id}>
@@ -247,7 +247,7 @@ export function Bar({
           </select>
           <span
             aria-hidden
-            className="pointer-events-none absolute right-2 text-[9px] text-neutral-500"
+            className="pointer-events-none absolute right-2 text-[9px] text-neutral-500 dark:text-neutral-400"
           >
             ▾
           </span>
@@ -268,7 +268,7 @@ export function Bar({
             aria-label="Dismiss"
             title="Dismiss"
             onClick={onDismiss}
-            className={`rounded-md border border-neutral-200 bg-white px-1.5 py-0.5 text-neutral-500 transition-colors hover:border-neutral-300 hover:text-neutral-900 ${RING}`}
+            className={`rounded-md border border-neutral-200 bg-white px-1.5 py-0.5 text-neutral-500 transition-colors hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-600 dark:hover:text-neutral-100 ${RING}`}
           >
             ✕
           </button>
@@ -283,7 +283,7 @@ export function Bar({
             value={intent ?? ''}
             placeholder="Write it messy — what do you want to say?"
             onChange={(event) => onIntentChange?.(event.target.value)}
-            className={`resize-none rounded-md border border-neutral-300 bg-white px-2.5 py-2 text-[13px] leading-relaxed placeholder:text-neutral-400 ${RING}`}
+            className={`resize-none rounded-md border border-neutral-300 bg-white px-2.5 py-2 text-[13px] leading-relaxed placeholder:text-neutral-400 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500 ${RING}`}
           />
         </div>
       ) : null}
@@ -349,7 +349,7 @@ export function Bar({
 
       {working && !result ? (
         <div className="px-3 pt-2.5">
-          <div className="space-y-1.5 rounded-lg border border-neutral-200 bg-neutral-50 px-2.5 py-2">
+          <div className="space-y-1.5 rounded-lg border border-neutral-200 bg-neutral-50 px-2.5 py-2 dark:border-neutral-800 dark:bg-neutral-950">
             <SkeletonLine width="88%" />
             <SkeletonLine width="72%" />
             <SkeletonLine width="54%" />
@@ -359,7 +359,7 @@ export function Bar({
 
       {result ? (
         <div className="px-3 pt-2.5">
-          <div className="max-h-52 overflow-auto rounded-lg border border-neutral-200 bg-neutral-50 px-2.5 py-2 leading-relaxed">
+          <div className="max-h-52 overflow-auto rounded-lg border border-neutral-200 bg-neutral-50 px-2.5 py-2 leading-relaxed dark:border-neutral-800 dark:bg-neutral-950">
             {showingChanges ? (
               <p className="whitespace-pre-wrap">
                 {diffWords(original ?? '', result).map((part, index) => (
@@ -367,9 +367,9 @@ export function Bar({
                     key={index}
                     className={
                       part.kind === 'removed'
-                        ? 'text-neutral-400 line-through'
+                        ? 'text-neutral-400 line-through dark:text-neutral-500'
                         : part.kind === 'added'
-                          ? 'underline decoration-neutral-400 decoration-1 underline-offset-2'
+                          ? 'underline decoration-neutral-400 decoration-1 underline-offset-2 dark:decoration-neutral-500'
                           : undefined
                     }
                   >
@@ -402,7 +402,7 @@ export function Bar({
       ) : null}
 
       {status === 'ready' || status === 'error' ? (
-        <div className="mt-2.5 flex flex-wrap items-center gap-1 border-t border-neutral-100 bg-neutral-50 px-3 py-1.5">
+        <div className="mt-2.5 flex flex-wrap items-center gap-1 border-t border-neutral-100 bg-neutral-50 px-3 py-1.5 dark:border-neutral-800 dark:bg-neutral-950">
           {/* Refinements act on a result. After a failure there is nothing to refine, only to retry. */}
           {result
             ? REFINEMENTS.map((refinement) => (
@@ -413,8 +413,8 @@ export function Bar({
                   onClick={() => onRefine?.(refinement.id)}
                   className={`rounded-full border px-2 py-0.5 text-[11px] transition-colors ${RING} ${
                     refinements?.includes(refinement.id)
-                      ? 'border-neutral-900 bg-neutral-900 text-white'
-                      : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:text-neutral-900'
+                      ? 'border-neutral-900 bg-neutral-900 text-white dark:border-neutral-100 dark:bg-neutral-100 dark:text-neutral-900'
+                      : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:border-neutral-600 dark:hover:text-neutral-100'
                   }`}
                 >
                   {refinement.label}
@@ -426,7 +426,7 @@ export function Bar({
             aria-label="Try again"
             title="Try again"
             onClick={onRetry}
-            className={`ml-auto rounded-md border border-neutral-200 bg-white px-1.5 py-0.5 text-[11px] text-neutral-500 transition-colors hover:border-neutral-300 hover:text-neutral-900 ${RING}`}
+            className={`ml-auto rounded-md border border-neutral-200 bg-white px-1.5 py-0.5 text-[11px] text-neutral-500 transition-colors hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-600 dark:hover:text-neutral-100 ${RING}`}
           >
             ↻
           </button>
@@ -435,13 +435,13 @@ export function Bar({
 
       {errorMessage ? (
         <div className="px-3 pt-2.5">
-          <p className="rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-red-800">
+          <p className="rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
             {errorMessage}
           </p>
         </div>
       ) : null}
 
-      <p className="border-t border-neutral-100 bg-neutral-50 px-3 py-1.5 text-[11px] text-neutral-500">
+      <p className="border-t border-neutral-100 bg-neutral-50 px-3 py-1.5 text-[11px] text-neutral-500 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-400">
         {inferredLine}
       </p>
     </div>
@@ -450,7 +450,7 @@ export function Bar({
 
 function Caret() {
   return (
-    <span className="ml-0.5 inline-block h-3.5 w-1.5 translate-y-0.5 rounded-sm bg-neutral-400 motion-safe:animate-pulse" />
+    <span className="ml-0.5 inline-block h-3.5 w-1.5 translate-y-0.5 rounded-sm bg-neutral-400 motion-safe:animate-pulse dark:bg-neutral-500" />
   );
 }
 
@@ -458,14 +458,17 @@ function Spinner() {
   return (
     <span
       aria-hidden
-      className="h-3 w-3 rounded-full border-[1.5px] border-white/30 border-t-white motion-safe:animate-spin"
+      className="h-3 w-3 rounded-full border-[1.5px] border-white/30 border-t-white motion-safe:animate-spin dark:border-neutral-900/30 dark:border-t-neutral-900"
     />
   );
 }
 
 function SkeletonLine({ width }: { width: string }) {
   return (
-    <div className="h-2.5 rounded bg-neutral-100 motion-safe:animate-pulse" style={{ width }} />
+    <div
+      className="h-2.5 rounded bg-neutral-100 motion-safe:animate-pulse dark:bg-neutral-800"
+      style={{ width }}
+    />
   );
 }
 
@@ -522,20 +525,20 @@ function Chip({
       aria-label={`${label}: ${value ?? fallback}. Change it`}
       className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 transition-colors ${RING} ${
         value
-          ? 'border-neutral-300 bg-white text-neutral-900 hover:border-neutral-500 hover:bg-neutral-50'
-          : 'border-dashed border-neutral-300 bg-white text-neutral-500 hover:border-neutral-500 hover:text-neutral-900'
+          ? 'border-neutral-300 bg-white text-neutral-900 hover:border-neutral-500 hover:bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:border-neutral-500 dark:hover:bg-neutral-700'
+          : 'border-dashed border-neutral-300 bg-white text-neutral-500 hover:border-neutral-500 hover:text-neutral-900 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-neutral-400 dark:hover:text-neutral-100'
       }`}
     >
-      <span className="text-[11px] text-neutral-400">{label}</span>
+      <span className="text-[11px] text-neutral-400 dark:text-neutral-500">{label}</span>
       {learned ? (
         <span
           aria-label="learned here"
           title="Learned from corrections you keep making here"
-          className="h-1.5 w-1.5 shrink-0 rounded-full bg-neutral-500"
+          className="h-1.5 w-1.5 shrink-0 rounded-full bg-neutral-500 dark:bg-neutral-400"
         />
       ) : null}
       <span className="max-w-[11rem] truncate">{value ?? fallback}</span>
-      <span aria-hidden className="text-[9px] text-neutral-400">
+      <span aria-hidden className="text-[9px] text-neutral-400 dark:text-neutral-500">
         ▾
       </span>
     </button>
@@ -572,7 +575,7 @@ function TextEditor({
           }
           if (event.key === 'Escape') setDraft(value);
         }}
-        className={`w-44 rounded-full border border-neutral-400 bg-white px-2 py-0.5 text-xs placeholder:text-neutral-400 ${RING}`}
+        className={`w-44 rounded-full border border-neutral-400 bg-white px-2 py-0.5 text-xs text-neutral-900 placeholder:text-neutral-400 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder:text-neutral-500 ${RING}`}
       />
       {listId ? (
         <datalist id={listId}>
@@ -597,7 +600,7 @@ function Segments<T extends string>({
   onSelect: (value: T) => void;
 }) {
   return (
-    <span className="inline-flex items-center gap-0.5 rounded-full border border-neutral-300 bg-white p-0.5">
+    <span className="inline-flex items-center gap-0.5 rounded-full border border-neutral-300 bg-white p-0.5 dark:border-neutral-600 dark:bg-neutral-800">
       {options.map((value) => (
         <button
           key={value}
@@ -606,8 +609,8 @@ function Segments<T extends string>({
           onClick={() => onSelect(value)}
           className={`rounded-full px-2 py-0.5 text-xs capitalize transition-colors ${RING} ${
             value === selected
-              ? 'bg-neutral-900 text-white'
-              : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
+              ? 'bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900'
+              : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-100'
           }`}
         >
           {labels?.[value] ?? value}

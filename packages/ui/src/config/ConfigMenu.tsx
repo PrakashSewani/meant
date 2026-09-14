@@ -2,7 +2,7 @@ import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Tabs from '@radix-ui/react-tabs';
 import type { ConfigEntry, MeantConfig, StoredConfigEntry } from '@meant/config';
-import { CARD, FIELD, GHOST, PRIMARY, RING } from '../styles';
+import { CARD, FIELD, GHOST, HEADING, MUTED, PRIMARY, RING } from '../styles';
 
 const TRANSPORTS = [
   { id: '@ai-sdk/anthropic', label: 'Anthropic (Messages API)' },
@@ -64,7 +64,7 @@ export function ConfigMenu({
     return (
       <section className={`${CARD} p-5 shadow-sm`}>
         <h2 className={HEADING}>Configs</h2>
-        <p className="mt-1 text-xs text-neutral-500">
+        <p className={`mt-1 text-xs ${MUTED}`}>
           Nothing saved yet. Add a provider to give it a key and pick the model each Effort uses.
         </p>
         <div className="mt-3">
@@ -79,7 +79,7 @@ export function ConfigMenu({
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className={HEADING}>Configs</h2>
-          <p className="mt-1 text-xs text-neutral-500">
+          <p className={`mt-1 text-xs ${MUTED}`}>
             One is live at a time. Keys are shared per provider, so switching never loses one.
           </p>
         </div>
@@ -89,19 +89,19 @@ export function ConfigMenu({
       <Tabs.Root
         value={selected?.id}
         onValueChange={setViewing}
-        className="mt-3"
+        className="mt-4"
         activationMode="manual"
       >
-        <Tabs.List className="flex flex-wrap items-center gap-1 border-b border-neutral-200">
+        <Tabs.List className="flex flex-wrap items-center gap-1 border-b border-neutral-200 dark:border-neutral-800">
           {entries.map((entry) => (
             <Tabs.Trigger
               key={entry.id}
               value={entry.id}
-              className={`-mb-px flex items-center gap-1.5 rounded-t-md border-b-2 px-2.5 py-1.5 text-xs transition-colors ${RING} data-[state=active]:border-neutral-900 data-[state=active]:font-medium data-[state=active]:text-neutral-900 border-transparent text-neutral-500 hover:text-neutral-900`}
+              className={`-mb-px flex items-center gap-1.5 rounded-t-md border-b-2 border-transparent px-3 py-2 text-xs text-neutral-500 transition-colors hover:text-neutral-900 data-[state=active]:border-neutral-900 data-[state=active]:font-medium data-[state=active]:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 dark:data-[state=active]:border-neutral-100 dark:data-[state=active]:text-neutral-100 ${RING}`}
             >
               {entry.name}
               {entry.id === activeId ? (
-                <span className="rounded-full bg-neutral-900 px-1.5 py-0.5 text-[9px] font-medium tracking-wide text-white uppercase">
+                <span className="rounded-full bg-neutral-900 px-1.5 py-0.5 text-[9px] font-medium tracking-wide text-white uppercase dark:bg-neutral-100 dark:text-neutral-900">
                   Live
                 </span>
               ) : null}
@@ -109,7 +109,7 @@ export function ConfigMenu({
           ))}
         </Tabs.List>
 
-        <Tabs.Content value={selected?.id ?? ''} className="pt-4">
+        <Tabs.Content value={selected?.id ?? ''} className="pt-5">
           {selected ? (
             <ConfigPanel
               // A fresh panel per config: the draft must not leak across a switch.
@@ -129,12 +129,10 @@ export function ConfigMenu({
         </Tabs.Content>
       </Tabs.Root>
 
-      {note ? <p className="mt-3 text-xs text-neutral-600">{note}</p> : null}
+      {note ? <p className={`mt-4 text-xs ${MUTED}`}>{note}</p> : null}
     </section>
   );
 }
-
-const HEADING = 'text-xs font-medium tracking-wide text-neutral-500 uppercase';
 
 interface Draft {
   name: string;
@@ -178,13 +176,13 @@ function ConfigPanel({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded-md border border-neutral-200 bg-neutral-50 px-2 py-0.5 font-mono text-[11px] text-neutral-600">
+        <span className="rounded-md border border-neutral-200 bg-neutral-50 px-2 py-0.5 font-mono text-[11px] text-neutral-600 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-300">
           {providerId || 'no provider'}
         </span>
         {isActive ? (
-          <span className="text-[11px] text-neutral-500">In use right now.</span>
+          <span className={`text-[11px] ${MUTED}`}>In use right now.</span>
         ) : (
           <button type="button" onClick={onActivate} disabled={busy} className={GHOST}>
             Use this config
@@ -192,151 +190,163 @@ function ConfigPanel({
         )}
       </div>
 
-      <Named label="Name" hint="What this config is called in the menu.">
-        <input
-          value={draft.name}
-          onChange={(event) => patch({ name: event.target.value })}
-          className={`${FIELD} ${RING}`}
-        />
-      </Named>
+      {/* Connection and models are unrelated concerns: side by side they read as two short lists
+          instead of one long column of everything. */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="space-y-4">
+          <p className={HEADING}>Connection</p>
 
-      <Named label="Transport" hint="How the request is shaped. Presets pick this for you.">
-        <select
-          value={draft.npm}
-          onChange={(event) => patch({ npm: event.target.value })}
-          className={`${FIELD} ${RING} cursor-pointer`}
-        >
-          {TRANSPORTS.map((transport) => (
-            <option key={transport.id} value={transport.id}>
-              {transport.label}
-            </option>
-          ))}
-        </select>
-      </Named>
+          <Named label="Name" hint="What this config is called in the menu.">
+            <input
+              value={draft.name}
+              onChange={(event) => patch({ name: event.target.value })}
+              className={`${FIELD} ${RING}`}
+            />
+          </Named>
 
-      <Named label="Base URL" hint="Where the calls go. A local server is usually loopback.">
-        <input
-          value={draft.baseURL}
-          onChange={(event) => patch({ baseURL: event.target.value })}
-          placeholder="https://api.example.com/v1"
-          className={`${FIELD} ${RING} font-mono`}
-        />
-      </Named>
-
-      <Named
-        label="Key"
-        hint={
-          keySaved
-            ? 'A key is saved for this provider. It is never shown again.'
-            : 'No key saved for this provider yet.'
-        }
-      >
-        <div className="flex items-center gap-2">
-          <input
-            type="password"
-            value={apiKey}
-            onChange={(event) => setApiKey(event.target.value)}
-            placeholder={keySaved ? 'paste a new key' : 'paste the key'}
-            className={`${FIELD} ${RING} font-mono`}
-          />
-          <button
-            type="button"
-            disabled={busy || apiKey.trim().length === 0}
-            onClick={() => {
-              onReplaceKey(providerId, apiKey.trim());
-              setApiKey('');
-            }}
-            className={GHOST}
-          >
-            Save key
-          </button>
-          {keySaved ? (
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => onRemoveKey(providerId)}
-              className={GHOST}
+          <Named label="Transport" hint="How the request is shaped. Presets pick this for you.">
+            <select
+              value={draft.npm}
+              onChange={(event) => patch({ npm: event.target.value })}
+              className={`${FIELD} ${RING} cursor-pointer`}
             >
-              Remove
-            </button>
-          ) : null}
-        </div>
-      </Named>
+              {TRANSPORTS.map((transport) => (
+                <option key={transport.id} value={transport.id}>
+                  {transport.label}
+                </option>
+              ))}
+            </select>
+          </Named>
 
-      <Named
-        label="Models"
-        hint="The ids this endpoint serves. Add the ones you want to use — a local server has no list to fetch."
-      >
-        <div className="space-y-1">
-          {draft.models.map((model, index) => (
-            <div key={index} className="flex items-center gap-2">
+          <Named label="Base URL" hint="Where the calls go. A local server is usually loopback.">
+            <input
+              value={draft.baseURL}
+              onChange={(event) => patch({ baseURL: event.target.value })}
+              placeholder="https://api.example.com/v1"
+              className={`${FIELD} ${RING} font-mono`}
+            />
+          </Named>
+
+          <Named
+            label="Key"
+            hint={
+              keySaved
+                ? 'A key is saved for this provider. It is never shown again.'
+                : 'No key saved for this provider yet.'
+            }
+          >
+            <div className="flex items-center gap-2">
               <input
-                value={model}
-                onChange={(event) => {
-                  const models = [...draft.models];
-                  models[index] = event.target.value;
-                  patch({ models });
-                }}
-                placeholder="model-id"
+                type="password"
+                value={apiKey}
+                onChange={(event) => setApiKey(event.target.value)}
+                placeholder={keySaved ? 'paste a new key' : 'paste the key'}
                 className={`${FIELD} ${RING} font-mono`}
               />
               <button
                 type="button"
-                aria-label={`Remove ${model || 'this model'}`}
-                onClick={() => patch({ models: draft.models.filter((_, at) => at !== index) })}
-                className={`${GHOST} px-1.5 py-1`}
+                disabled={busy || apiKey.trim().length === 0}
+                onClick={() => {
+                  onReplaceKey(providerId, apiKey.trim());
+                  setApiKey('');
+                }}
+                className={`${GHOST} shrink-0 whitespace-nowrap`}
               >
-                ✕
+                Save key
               </button>
+              {keySaved ? (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => onRemoveKey(providerId)}
+                  className={`${GHOST} shrink-0`}
+                >
+                  Remove
+                </button>
+              ) : null}
             </div>
-          ))}
-          <button
-            type="button"
-            onClick={() => patch({ models: [...draft.models, ''] })}
-            className={GHOST}
-          >
-            + Add model id
-          </button>
+          </Named>
         </div>
-      </Named>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Named label="Quick" hint="small_model">
-          <input
-            value={draft.quick}
-            list="meant-model-ids"
-            onChange={(event) => patch({ quick: event.target.value })}
-            placeholder="haiku-class"
-            className={`${FIELD} ${RING} font-mono`}
-          />
-        </Named>
-        <Named label="Balanced" hint="model">
-          <input
-            value={draft.balanced}
-            list="meant-model-ids"
-            onChange={(event) => patch({ balanced: event.target.value })}
-            placeholder="sonnet-class"
-            className={`${FIELD} ${RING} font-mono`}
-          />
-        </Named>
-        <Named label="Deep" hint="reasoning_model">
-          <input
-            value={draft.deep}
-            list="meant-model-ids"
-            onChange={(event) => patch({ deep: event.target.value })}
-            placeholder="opus-class"
-            className={`${FIELD} ${RING} font-mono`}
-          />
-        </Named>
+        <div className="space-y-4">
+          <p className={HEADING}>Models</p>
+          <p className={`text-[11px] ${MUTED}`}>
+            The ids this endpoint serves. Add the ones you want to use — a local server has no list
+            to fetch.
+          </p>
+
+          <div className="space-y-1.5">
+            {draft.models.map((model, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <input
+                  value={model}
+                  onChange={(event) => {
+                    const models = [...draft.models];
+                    models[index] = event.target.value;
+                    patch({ models });
+                  }}
+                  placeholder="model-id"
+                  className={`${FIELD} ${RING} font-mono`}
+                />
+                <button
+                  type="button"
+                  aria-label={`Remove ${model || 'this model'}`}
+                  onClick={() => patch({ models: draft.models.filter((_, at) => at !== index) })}
+                  className={`${GHOST} shrink-0 px-1.5 py-1`}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => patch({ models: [...draft.models, ''] })}
+              className={GHOST}
+            >
+              + Add model id
+            </button>
+          </div>
+
+          <div className="space-y-3 border-t border-neutral-100 pt-4 dark:border-neutral-800">
+            <p className={HEADING}>Effort → model</p>
+            <Named label="Quick" hint="small_model">
+              <input
+                value={draft.quick}
+                list="meant-model-ids"
+                onChange={(event) => patch({ quick: event.target.value })}
+                placeholder="haiku-class"
+                className={`${FIELD} ${RING} font-mono`}
+              />
+            </Named>
+            <Named label="Balanced" hint="model">
+              <input
+                value={draft.balanced}
+                list="meant-model-ids"
+                onChange={(event) => patch({ balanced: event.target.value })}
+                placeholder="sonnet-class"
+                className={`${FIELD} ${RING} font-mono`}
+              />
+            </Named>
+            <Named label="Deep" hint="reasoning_model">
+              <input
+                value={draft.deep}
+                list="meant-model-ids"
+                onChange={(event) => patch({ deep: event.target.value })}
+                placeholder="opus-class"
+                className={`${FIELD} ${RING} font-mono`}
+              />
+            </Named>
+          </div>
+
+          <datalist id="meant-model-ids">
+            {draft.models.filter(Boolean).map((model) => (
+              <option key={model} value={model} />
+            ))}
+          </datalist>
+        </div>
       </div>
 
-      <datalist id="meant-model-ids">
-        {draft.models.filter(Boolean).map((model) => (
-          <option key={model} value={model} />
-        ))}
-      </datalist>
-
-      <div className="flex flex-wrap items-center gap-2 pt-1">
+      <div className="flex flex-wrap items-center gap-2 border-t border-neutral-100 pt-4 dark:border-neutral-800">
         <button
           type="button"
           disabled={busy}
@@ -360,18 +370,18 @@ function DeleteConfig({ name, onConfirm }: { name: string; onConfirm: () => void
       <Dialog.Trigger asChild>
         <button
           type="button"
-          className={`${GHOST} ml-auto border-red-200 text-red-700 hover:border-red-300 hover:text-red-800`}
+          className={`${GHOST} ml-auto border-red-200 text-red-700 hover:border-red-300 hover:text-red-800 dark:border-red-900 dark:text-red-300 dark:hover:border-red-800 dark:hover:text-red-200`}
         >
           Delete
         </button>
       </Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/20" />
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/20 dark:bg-black/50" />
         <Dialog.Content
-          className={`fixed top-1/2 left-1/2 z-50 w-[22rem] -translate-x-1/2 -translate-y-1/2 ${CARD} p-5 shadow-xl`}
+          className={`fixed top-1/2 left-1/2 z-50 w-[24rem] -translate-x-1/2 -translate-y-1/2 ${CARD} p-5 shadow-xl`}
         >
           <Dialog.Title className="text-sm font-medium">Delete “{name}”?</Dialog.Title>
-          <Dialog.Description className="mt-1 text-xs text-neutral-500">
+          <Dialog.Description className={`mt-1 text-xs ${MUTED}`}>
             The key stays — it belongs to the provider, not to this config.
           </Dialog.Description>
           <div className="mt-4 flex justify-end gap-2">
@@ -434,31 +444,31 @@ function AddConfigDialog({
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
-        <button type="button" className={GHOST}>
+        <button type="button" className={`${GHOST} shrink-0`}>
           + Add config
         </button>
       </Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/20" />
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/20 dark:bg-black/50" />
         <Dialog.Content
-          className={`fixed top-1/2 left-1/2 z-50 max-h-[85vh] w-[30rem] -translate-x-1/2 -translate-y-1/2 overflow-auto ${CARD} p-5 shadow-xl`}
+          className={`fixed top-1/2 left-1/2 z-50 max-h-[85vh] w-[34rem] -translate-x-1/2 -translate-y-1/2 overflow-auto ${CARD} p-5 shadow-xl`}
         >
           <Dialog.Title className="text-sm font-medium">Add a config</Dialog.Title>
-          <Dialog.Description className="mt-1 text-xs text-neutral-500">
+          <Dialog.Description className={`mt-1 text-xs ${MUTED}`}>
             Start from a preset, or point at any endpoint that speaks the OpenAI API.
           </Dialog.Description>
 
-          <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
             {[...presets, { id: 'custom', name: 'Custom (OpenAI-compatible)' }].map((candidate) => (
               <button
                 key={candidate.id}
                 type="button"
                 aria-pressed={candidate.id === presetId}
                 onClick={() => setPresetId(candidate.id)}
-                className={`${RING} rounded-md border px-3 py-2 text-left text-xs ${
+                className={`${RING} rounded-md border px-2.5 py-2 text-left text-xs transition-colors ${
                   candidate.id === presetId
-                    ? 'border-neutral-900 bg-neutral-50 font-medium'
-                    : 'border-neutral-200 hover:border-neutral-300'
+                    ? 'border-neutral-900 bg-neutral-50 font-medium dark:border-neutral-100 dark:bg-neutral-800'
+                    : 'border-neutral-200 hover:border-neutral-300 dark:border-neutral-700 dark:hover:border-neutral-600'
                 }`}
               >
                 {candidate.name}
@@ -466,13 +476,26 @@ function AddConfigDialog({
             ))}
           </div>
 
-          <div className="mt-3 space-y-3">
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <Named label="Name" hint="How it shows up in the menu.">
               <input
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 placeholder={preset?.name ?? 'My endpoint'}
                 className={`${FIELD} ${RING}`}
+              />
+            </Named>
+
+            <Named
+              label="Key"
+              hint="Stored in this browser profile. Never synced, never in a page."
+            >
+              <input
+                type="password"
+                value={apiKey}
+                onChange={(event) => setApiKey(event.target.value)}
+                placeholder="paste it here"
+                className={`${FIELD} ${RING} font-mono`}
               />
             </Named>
 
@@ -496,25 +519,12 @@ function AddConfigDialog({
                 </Named>
               </>
             ) : (
-              <p className="text-xs text-neutral-500">{preset?.notes}</p>
+              <p className={`text-xs sm:col-span-2 ${MUTED}`}>{preset?.notes}</p>
             )}
-
-            <Named
-              label="Key"
-              hint="Stored in this browser profile. Never synced, never in a page."
-            >
-              <input
-                type="password"
-                value={apiKey}
-                onChange={(event) => setApiKey(event.target.value)}
-                placeholder="paste it here"
-                className={`${FIELD} ${RING} font-mono`}
-              />
-            </Named>
           </div>
 
-          <div className="mt-4 flex items-center justify-end gap-2">
-            {problem ? <span className="mr-auto text-xs text-neutral-600">{problem}</span> : null}
+          <div className="mt-4 flex items-center justify-end gap-2 border-t border-neutral-100 pt-4 dark:border-neutral-800">
+            {problem ? <span className={`mr-auto text-xs ${MUTED}`}>{problem}</span> : null}
             <Dialog.Close asChild>
               <button type="button" className={GHOST}>
                 Cancel
@@ -541,9 +551,13 @@ function Named({
 }) {
   return (
     <label className="block">
-      <span className="text-xs text-neutral-500">{label}</span>
+      <span className={`text-xs ${MUTED}`}>{label}</span>
       {children}
-      {hint ? <span className="mt-1 block text-[11px] text-neutral-400">{hint}</span> : null}
+      {hint ? (
+        <span className="mt-1 block text-[11px] text-neutral-400 dark:text-neutral-500">
+          {hint}
+        </span>
+      ) : null}
     </label>
   );
 }

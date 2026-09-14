@@ -1,4 +1,8 @@
 @import 'tailwindcss';
 
+/* The theme is the user's choice, not the OS's, so `dark:` follows a class we set on the surface
+   instead of the media query. `system` resolves to that class before anything renders. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @source "../entrypoints/**/*.{ts,tsx,html}";
 @source "../../../packages/ui/src/**/*.{ts,tsx}";
