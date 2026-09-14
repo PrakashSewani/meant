@@ -51,6 +51,17 @@ and a local vault (secrets).
 }
 ```
 
+### More than one config
+
+Both files are the contract; the extension keeps a **library of named configs** on top of it
+(`meant.configs`, with `meant.activeConfig` naming the live one). Switching between them rewrites
+neither: a config is data, and the live one is a pointer. Keys are keyed by **provider id** and
+shared by every config that uses that provider, so switching or deleting a config can never lose a
+key — and the Configs section of the options page is the only place any of it is edited.
+
+A config saved before the library existed is adopted into it on first open, named after its
+provider, and the old key is removed in the same step.
+
 ### Field reference
 
 | Field                                      | Type               | Meaning                                                                                  |

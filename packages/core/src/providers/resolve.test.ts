@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveModel, transportFor } from './resolve';
+import { modelFailureCopy, resolveModel, resolveModelOrReason, transportFor } from './resolve';
 
 const REFS = {
   fast: 'groq/llama-3.3-70b-versatile',
@@ -89,6 +89,59 @@ describe('resolveModel', () => {
     });
 
     expect(model).toMatchObject({ modelId: 'claude-sonnet-5', tier: 'reasoning' });
+  });
+});
+
+describe('resolveModelOrReason', () => {
+  it('says nothing is configured rather than inventing a model', () => {
+    expect(
+      resolveModelOrReason({ refs: {}, providers: undefined, secrets: {}, effort: 'balanced' }),
+    ).toEqual({ ok: false, reason: 'not-configured' });
+  });
+
+  it('tells a provider with no model apart from no provider at all', () => {
+    // What the LM Studio and llama.cpp presets store: a provider block, and no model ids.
+    expect(
+      resolveModelOrReason({
+        refs: {},
+        providers: { lmstudio: { options: { baseURL: 'http://127.0.0.1:1234/v1' } } },
+        secrets: {},
+        effort: 'balanced',
+      }),
+    ).toEqual({ ok: false, reason: 'no-model' });
+  });
+
+  it('reports a reference that is not provider/model', () => {
+    expect(
+      resolveModelOrReason({
+        refs: { main: 'gpt-5.2' },
+        providers: { openai: { options: { baseURL: 'https://api.openai.com/v1' } } },
+        secrets: {},
+        effort: 'balanced',
+      }),
+    ).toEqual({ ok: false, reason: 'bad-ref', ref: 'gpt-5.2' });
+  });
+
+  it('reports a reference to a provider that is not configured', () => {
+    expect(
+      resolveModelOrReason({
+        refs: { main: 'acme/gpt-5.2' },
+        providers: { openai: { options: { baseURL: 'https://api.openai.com/v1' } } },
+        secrets: {},
+        effort: 'balanced',
+      }),
+    ).toEqual({ ok: false, reason: 'unknown-provider', providerId: 'acme' });
+  });
+});
+
+describe('modelFailureCopy', () => {
+  it('names the reference the user has to fix', () => {
+    expect(modelFailureCopy({ ok: false, reason: 'bad-ref', ref: 'gpt-5.2' })).toContain('gpt-5.2');
+    expect(
+      modelFailureCopy({ ok: false, reason: 'unknown-provider', providerId: 'acme' }),
+    ).toContain('acme');
+    expect(modelFailureCopy({ ok: false, reason: 'no-model' })).toContain('Settings');
+    expect(modelFailureCopy({ ok: false, reason: 'not-configured' })).toContain('No provider');
   });
 });
 

@@ -1,10 +1,13 @@
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { chromium, expect, test, type BrowserContext } from '@playwright/test';
+import { chromium, expect, test, type BrowserContext, type Worker } from '@playwright/test';
 
 const EXTENSION_PATH = join(process.cwd(), 'apps', 'extension', '.output', 'chrome-mv3');
 const FIXTURE = 'http://localhost:3123/fixture.html';
+
+/** Mirrors PIECES in e2e/serve-fixture.mjs: an answer can only have come from that endpoint. */
+const PROVIDER_REPLY = 'Deploy slipped a day. We are on it, fix by EOD.';
 
 let context: BrowserContext;
 
@@ -22,6 +25,9 @@ test.afterAll(async () => {
 });
 
 test('polish, accept, and one native undo puts the original text back', async () => {
+  const worker = await serviceWorker();
+  await configureFixtureProvider(worker);
+
   const page = await context.newPage();
   await page.goto(FIXTURE);
 
@@ -29,7 +35,7 @@ test('polish, accept, and one native undo puts the original text back', async ()
   const original = await field.inputValue();
   await field.selectText();
 
-  await invokeBar(context);
+  await invokeBar();
 
   const bar = page.locator('meant-bar');
   await expect(bar).toHaveAttribute('data-state', 'idle');
@@ -40,7 +46,7 @@ test('polish, accept, and one native undo puts the original text back', async ()
   await page.keyboard.press('Enter');
 
   // Assert the answer, not just "something changed": a stray keystroke would satisfy that.
-  await expect(field).toHaveValue(/^\[mock\] ugh tell sarah/);
+  await expect(field).toHaveValue(PROVIDER_REPLY);
 
   // The whole point of the write helper: Chromium recorded the edit, so ⌘Z gives the words back.
   await page.evaluate(() => document.execCommand('undo'));
@@ -53,13 +59,13 @@ test('the command path reaches one frame, not every frame', async () => {
   await page.goto(FIXTURE);
 
   await page.locator('#plain').selectText();
-  await invokeBar(context);
+  await invokeBar();
 
   await expect(page.locator('meant-bar')).toHaveCount(1);
 });
 
 test('the bar’s stylesheet is where the bar script looks for it', async () => {
-  const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
+  const worker = await serviceWorker();
 
   // A silently unstyled bar is exactly the kind of thing unit tests cannot see.
   const status = await worker.evaluate(async () => {
@@ -71,25 +77,10 @@ test('the bar’s stylesheet is where the bar script looks for it', async () => 
 });
 
 test('a configured endpoint is called for real, through the same pipeline', async () => {
-  const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
+  const worker = await serviceWorker();
 
-  // What the custom-provider form writes, by hand: an OpenAI-compatible endpoint on this machine.
-  await worker.evaluate(async () => {
-    await chrome.storage.local.set({
-      'meant.config': {
-        model: 'fixture/fixture-model',
-        provider: {
-          fixture: {
-            npm: '@ai-sdk/openai-compatible',
-            name: 'Fixture',
-            options: { baseURL: 'http://localhost:3123/v1' },
-            models: { 'fixture-model': { name: 'fixture-model' } },
-          },
-        },
-      },
-      'meant.secrets': { fixture: 'sk-fixture' },
-    });
-  });
+  // What the custom-provider form writes: an OpenAI-compatible endpoint on this machine.
+  await configureFixtureProvider(worker);
 
   try {
     const page = await context.newPage();
@@ -97,7 +88,7 @@ test('a configured endpoint is called for real, through the same pipeline', asyn
 
     const field = page.locator('#plain');
     await field.selectText();
-    await invokeBar(context);
+    await invokeBar();
 
     const bar = page.locator('meant-bar');
     await expect(bar).toHaveAttribute('data-state', 'idle');
@@ -105,23 +96,22 @@ test('a configured endpoint is called for real, through the same pipeline', asyn
     await expect(bar).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
     await page.keyboard.press('Enter');
 
-    // Mirrors PROVIDER_REPLY in the fixture server: proof the answer came from the endpoint.
-    await expect(field).toHaveValue('Deploy slipped a day. We are on it, fix by EOD.', {
-      timeout: 10_000,
-    });
+    // Proof the answer came from the endpoint rather than from anything inside the extension.
+    await expect(field).toHaveValue(PROVIDER_REPLY, { timeout: 10_000 });
   } finally {
     await worker.evaluate(() => chrome.storage.local.clear());
   }
 });
 
 test('editing a chip reaches the model, not just the pill', async () => {
-  const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
+  const worker = await serviceWorker();
+  await configureFixtureProvider(worker);
   await worker.evaluate(() => chrome.storage.local.remove('meant.events'));
 
   const page = await context.newPage();
   await page.goto(FIXTURE);
   await page.locator('#plain').selectText();
-  await invokeBar(context);
+  await invokeBar();
 
   const bar = page.locator('meant-bar');
   await expect(bar).toHaveAttribute('data-state', 'idle');
@@ -151,6 +141,9 @@ test('editing a chip reaches the model, not just the pill', async () => {
 });
 
 test('compose mode writes into an empty field', async () => {
+  const worker = await serviceWorker();
+  await configureFixtureProvider(worker);
+
   const page = await context.newPage();
   await page.goto(FIXTURE);
 
@@ -158,7 +151,7 @@ test('compose mode writes into an empty field', async () => {
   await expect(field).toHaveValue('');
   await field.click();
 
-  await invokeBar(context);
+  await invokeBar();
 
   const bar = page.locator('meant-bar');
   await expect(bar).toHaveAttribute('data-state', 'idle');
@@ -172,10 +165,13 @@ test('compose mode writes into an empty field', async () => {
   // In compose mode ⏎ is a newline in the intent box, so the primary action is ⌘⏎ throughout.
   await page.keyboard.press('ControlOrMeta+Enter');
 
-  await expect(field).toHaveValue(/^\[mock\] tell sarah the deploy slipped a day/);
+  await expect(field).toHaveValue(PROVIDER_REPLY);
 });
 
 test('writes into a rich editor that has markup in the way', async () => {
+  const worker = await serviceWorker();
+  await configureFixtureProvider(worker);
+
   const page = await context.newPage();
   await page.goto('http://localhost:3123/fixture-rich.html');
 
@@ -185,7 +181,7 @@ test('writes into a rich editor that has markup in the way', async () => {
   // Select the rough line inside its paragraph: the write has to land in the middle of markup.
   await editor.locator('p').first().selectText();
 
-  await invokeBar(context);
+  await invokeBar();
 
   const bar = page.locator('meant-bar');
   await expect(bar).toHaveAttribute('data-state', 'idle');
@@ -195,18 +191,153 @@ test('writes into a rich editor that has markup in the way', async () => {
 
   // The rest of the thread survives, which is the invariant about transforming only the selection.
   await expect(editor).toContainText('Two tests fail');
+  await expect(editor).toContainText(PROVIDER_REPLY);
   await expect(editor.innerText()).not.toBe(before);
 
   await page.evaluate(() => document.execCommand('undo'));
   expect(await editor.innerText()).toBe(before);
 });
 
+test('a provider with no model says so instead of answering', async () => {
+  const worker = await serviceWorker();
+
+  // What the local presets store: a provider block, and no model id filled in yet.
+  await worker.evaluate(async () => {
+    await chrome.storage.local.set({
+      'meant.config': {
+        provider: {
+          lmstudio: {
+            npm: '@ai-sdk/openai-compatible',
+            name: 'LM Studio (local)',
+            options: { baseURL: 'http://127.0.0.1:1234/v1' },
+          },
+        },
+      },
+    });
+  });
+
+  try {
+    const page = await context.newPage();
+    await page.goto(FIXTURE);
+
+    const field = page.locator('#plain');
+    const original = await field.inputValue();
+    await field.selectText();
+    await invokeBar();
+
+    const bar = page.locator('meant-bar');
+    await expect(bar).toHaveAttribute('data-state', 'idle');
+    await page.keyboard.press('Enter');
+
+    // A provider that is configured but has no model is not a first run, so an answer here would
+    // be fabricated — and would hide what is actually missing.
+    await expect(bar).toHaveAttribute('data-state', 'error');
+    await expect(field).toHaveValue(original);
+  } finally {
+    await worker.evaluate(() => chrome.storage.local.clear());
+  }
+});
+
+test('nothing configured is an error, not a made-up answer', async () => {
+  const worker = await serviceWorker();
+  await worker.evaluate(() => chrome.storage.local.clear());
+
+  const page = await context.newPage();
+  await page.goto(FIXTURE);
+
+  const field = page.locator('#plain');
+  const original = await field.inputValue();
+  await field.selectText();
+  await invokeBar();
+
+  const bar = page.locator('meant-bar');
+  await expect(bar).toHaveAttribute('data-state', 'idle');
+  await page.keyboard.press('Enter');
+
+  // There is nothing to demo with: with no provider the bar has to say so.
+  await expect(bar).toHaveAttribute('data-state', 'error');
+  await expect(field).toHaveValue(original);
+});
+
+test('the config that is active is the one that runs', async () => {
+  const worker = await serviceWorker();
+
+  // Two saved configs and no old-style config, so the only way to reach a model is the active id.
+  await worker.evaluate(async () => {
+    await chrome.storage.local.set({
+      'meant.configs': {
+        good: {
+          name: 'Fixture',
+          config: {
+            model: 'fixture/fixture-model',
+            provider: {
+              fixture: {
+                npm: '@ai-sdk/openai-compatible',
+                name: 'Fixture',
+                options: { baseURL: 'http://localhost:3123/v1' },
+                models: { 'fixture-model': { name: 'fixture-model' } },
+              },
+            },
+          },
+        },
+        half: {
+          name: 'Half set up',
+          config: {
+            provider: {
+              lmstudio: {
+                name: 'LM Studio (local)',
+                options: { baseURL: 'http://127.0.0.1:1234/v1' },
+              },
+            },
+          },
+        },
+      },
+      'meant.activeConfig': 'good',
+      'meant.secrets': { fixture: 'sk-fixture' },
+    });
+  });
+
+  try {
+    const page = await context.newPage();
+    await page.goto(FIXTURE);
+
+    const field = page.locator('#plain');
+    await field.selectText();
+    await invokeBar();
+
+    const bar = page.locator('meant-bar');
+    await expect(bar).toHaveAttribute('data-state', 'idle');
+    await page.keyboard.press('Enter');
+    await expect(bar).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
+    await page.keyboard.press('Enter');
+    await expect(field).toHaveValue(PROVIDER_REPLY);
+
+    // Switch the selection to the config with no model, and ask again.
+    await worker.evaluate(() => chrome.storage.local.set({ 'meant.activeConfig': 'half' }));
+
+    const second = await context.newPage();
+    await second.goto(FIXTURE);
+    await second.locator('#plain').selectText();
+    await invokeBar();
+
+    const secondBar = second.locator('meant-bar');
+    await expect(secondBar).toHaveAttribute('data-state', 'idle');
+    await second.keyboard.press('Enter');
+
+    // Nothing to call: the active config is the half-finished one, and it says so instead of
+    // quietly falling back to the config that would have worked.
+    await expect(secondBar).toHaveAttribute('data-state', 'error');
+  } finally {
+    await worker.evaluate(() => chrome.storage.local.clear());
+  }
+});
+
 /**
  * Drives the same path the browser command does: the worker tells the tab to open the bar. The
  * command itself is a browser-level shortcut, which is not ours to test.
  */
-async function invokeBar(context: BrowserContext): Promise<void> {
-  const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
+async function invokeBar(): Promise<void> {
+  const worker = await serviceWorker();
 
   const tabId = await worker.evaluate(async () => {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -216,4 +347,30 @@ async function invokeBar(context: BrowserContext): Promise<void> {
   if (tabId === undefined) throw new Error('no active tab to invoke');
 
   await worker.evaluate((id) => chrome.tabs.sendMessage(id, { type: 'invoke-bar' }), tabId);
+}
+
+async function serviceWorker(): Promise<Worker> {
+  const [existing] = context.serviceWorkers();
+
+  return existing ?? (await context.waitForEvent('serviceworker'));
+}
+
+/** The fixture endpoint, shaped exactly like a provider the user configured. Never a real key. */
+async function configureFixtureProvider(worker: Worker): Promise<void> {
+  await worker.evaluate(async () => {
+    await chrome.storage.local.set({
+      'meant.config': {
+        model: 'fixture/fixture-model',
+        provider: {
+          fixture: {
+            npm: '@ai-sdk/openai-compatible',
+            name: 'Fixture',
+            options: { baseURL: 'http://localhost:3123/v1' },
+            models: { 'fixture-model': { name: 'fixture-model' } },
+          },
+        },
+      },
+      'meant.secrets': { fixture: 'sk-fixture' },
+    });
+  });
 }

@@ -17,10 +17,30 @@ pnpm --filter @meant/extension build
 
 - [ ] Load `apps/extension/.output/chrome-mv3` at `chrome://extensions` → Developer mode → Load
       unpacked. Reload it after every rebuild.
-- [ ] Options → pick a provider → paste a key → **Save and enable**. The provider permission
+- [ ] Options → **+ Add config** → pick a provider → paste a key → **Add**. The provider permission
       prompt appears once. The doctor runs itself and reports a row per model.
 - [ ] Every row is ✓. A ✗ says which kind of failure it was — key, model id, origin, network. Fix
       by that name, not by guessing.
+      **Result: reported** — with a provider saved (a preset, and separately a custom one), the
+      transform answered `[mock] …`, so no provider call was made at all. Cause: the worker
+      replaced every unusable configuration with the mock, so a provider that was configured but
+      had no model could not be told apart from a fresh install. There is no mock in the product
+      any more: every reason a model is missing is an error in the bar, and the doctor names the
+      reason instead of saying nothing is configured. Re-run this step — the reason it shows is
+      what decides the next fix.
+
+## 0b. Configs
+
+- [ ] Options → **Configs** shows the config you already had, named after its provider, with
+      **Live** on it. (It is adopted from the old single-config key on first open.)
+- [ ] **+ Add config** a second one → **Use this config** → the popup's **Config** line follows,
+      and the next transform uses it. Switching fires no request.
+- [ ] **LM Studio (local)** (or Custom): type the model id your server exposes, **Save**, then
+      **Test connection** → a ✓ row. Until now this preset had no field for a model id anywhere.
+- [ ] Delete a config → the key survives, the other config becomes live, and a reload does not
+      bring the deleted one back.
+- [ ] The bar's chips, the recipe dropdown and the result block are all visibly bordered, and
+      `Tab` through the bar shows a focus ring on whatever has focus.
       **Result:**
 
 ## 1. The fast path
@@ -32,7 +52,12 @@ pnpm --filter @meant/extension build
 - [ ] `⏎` transforms. `⏎` again accepts. The selection is replaced and the rest of the page is
       untouched.
 - [ ] `⌘Z` once gives the original words back.
-      **Result:**
+      **Result: found by the suite, not yet watched here by hand** — with a real endpoint the loop
+      failed at the second step: the working state disables the primary button, a disabled button
+      cannot hold focus, and focus fell to the page, so the `⏎` that should accept went nowhere.
+      The result was on screen and could only be accepted by clicking. The built-in mock had been
+      hiding it by answering instantly. The bar now takes focus back when a result lands (never
+      when something inside the bar has it, and never when focus is somewhere the user chose).
 
 ## 2. Compose mode
 

@@ -23,3 +23,19 @@ export type { PresetModel, ProviderPreset, TransportId } from './presets.ts';
 
 export { customProviderConfig, isValidProviderId, originPatternFor } from './custom.ts';
 export type { CustomProviderInput } from './custom.ts';
+
+export {
+  ACTIVE_CONFIG_KEY,
+  CONFIGS_KEY,
+  LEGACY_CONFIG_KEY,
+  adoptLegacyConfig,
+  configLibrary,
+  nextConfigId,
+  readActiveConfig,
+} from './active.ts';
+export type {
+  ActiveConfigResult,
+  ConfigEntry,
+  StoredConfigEntry,
+  StoredConfigs,
+} from './active.ts';

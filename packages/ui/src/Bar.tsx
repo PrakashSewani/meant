@@ -15,6 +15,7 @@ import {
   parseTones,
   parseWho,
 } from './register-input';
+import { GHOST, PRIMARY, RING } from './styles';
 
 const EFFORTS: readonly Effort[] = ['quick', 'balanced', 'deep'];
 const LENGTHS: readonly Length[] = ['short', 'medium', 'long'];
@@ -151,6 +152,20 @@ export function Bar({
   }, [anchor, result, errorMessage, status]);
 
   useEffect(() => {
+    // Working disables the primary button, and a disabled button cannot hold focus, so the page
+    // takes it back. Without this, the ⏎ that transformed would go nowhere once the result lands.
+    if (working) return;
+
+    const root = dialog.current?.getRootNode();
+    if (!(root instanceof ShadowRoot) || root.activeElement !== null) return;
+
+    // Only when focus is nowhere in particular — never when the user has gone back to the page.
+    if (document.activeElement !== null && document.activeElement !== document.body) return;
+
+    dialog.current?.focus();
+  }, [working]);
+
+  useEffect(() => {
     // Listening on the shadow root rather than the document is what keeps the page's own keys out:
     // nothing below it is the page's, and nothing above it is ours.
     const root = dialog.current?.getRootNode();
@@ -216,25 +231,34 @@ export function Bar({
         <span aria-hidden className="text-neutral-300">
           ✦
         </span>
-        <select
-          value={recipeId}
-          aria-label="Transform"
-          onChange={(event) => onRecipeChange?.(event.target.value)}
-          className="max-w-[12rem] cursor-pointer truncate bg-transparent font-medium text-neutral-900 focus:outline-none"
-        >
-          {recipes.map((recipe) => (
-            <option key={recipe.id} value={recipe.id}>
-              {recipe.label}
-            </option>
-          ))}
-        </select>
+        {/* A dropdown has to look like one: the native arrow is transparent in too many themes. */}
+        <span className="relative inline-flex items-center">
+          <select
+            value={recipeId}
+            aria-label="Transform"
+            onChange={(event) => onRecipeChange?.(event.target.value)}
+            className={`max-w-[12rem] cursor-pointer appearance-none truncate rounded-md border border-neutral-200 bg-white py-1 pl-2 pr-6 font-medium text-neutral-900 transition-colors hover:border-neutral-300 ${RING}`}
+          >
+            {recipes.map((recipe) => (
+              <option key={recipe.id} value={recipe.id}>
+                {recipe.label}
+              </option>
+            ))}
+          </select>
+          <span
+            aria-hidden
+            className="pointer-events-none absolute right-2 text-[9px] text-neutral-500"
+          >
+            ▾
+          </span>
+        </span>
 
         <div className="ml-auto flex items-center gap-1.5">
           <button
             type="button"
             onClick={onPrimary}
             disabled={working || nothingToTransform}
-            className="flex items-center gap-1.5 rounded-md bg-neutral-900 px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-neutral-700 disabled:opacity-70"
+            className={PRIMARY}
           >
             {working ? <Spinner /> : null}
             {working ? 'Working' : primaryLabel}
@@ -242,8 +266,9 @@ export function Bar({
           <button
             type="button"
             aria-label="Dismiss"
+            title="Dismiss"
             onClick={onDismiss}
-            className="rounded-md px-1 text-neutral-400 transition-colors hover:text-neutral-800"
+            className={`rounded-md border border-neutral-200 bg-white px-1.5 py-0.5 text-neutral-500 transition-colors hover:border-neutral-300 hover:text-neutral-900 ${RING}`}
           >
             ✕
           </button>
@@ -251,14 +276,16 @@ export function Bar({
       </div>
 
       {mode === 'compose' ? (
-        <textarea
-          autoFocus
-          rows={3}
-          value={intent ?? ''}
-          placeholder="Write it messy — what do you want to say?"
-          onChange={(event) => onIntentChange?.(event.target.value)}
-          className="w-full resize-none border-b border-neutral-100 px-3 py-2.5 text-[13px] leading-relaxed placeholder:text-neutral-400 focus:outline-none"
-        />
+        <div className="px-3 pt-2.5">
+          <textarea
+            autoFocus
+            rows={3}
+            value={intent ?? ''}
+            placeholder="Write it messy — what do you want to say?"
+            onChange={(event) => onIntentChange?.(event.target.value)}
+            className={`resize-none rounded-md border border-neutral-300 bg-white px-2.5 py-2 text-[13px] leading-relaxed placeholder:text-neutral-400 ${RING}`}
+          />
+        </div>
       ) : null}
 
       <div className="flex flex-wrap items-center gap-1.5 px-3 py-2.5">
@@ -321,49 +348,53 @@ export function Bar({
       </div>
 
       {working && !result ? (
-        <div className="space-y-1.5 border-t border-neutral-100 px-3 py-2.5">
-          <SkeletonLine width="88%" />
-          <SkeletonLine width="72%" />
-          <SkeletonLine width="54%" />
+        <div className="px-3 pt-2.5">
+          <div className="space-y-1.5 rounded-lg border border-neutral-200 bg-neutral-50 px-2.5 py-2">
+            <SkeletonLine width="88%" />
+            <SkeletonLine width="72%" />
+            <SkeletonLine width="54%" />
+          </div>
         </div>
       ) : null}
 
       {result ? (
-        <div className="max-h-52 overflow-auto border-t border-neutral-100 px-3 py-2.5 leading-relaxed">
-          {showingChanges ? (
-            <p className="whitespace-pre-wrap">
-              {diffWords(original ?? '', result).map((part, index) => (
-                <span
-                  key={index}
-                  className={
-                    part.kind === 'removed'
-                      ? 'text-neutral-400 line-through'
-                      : part.kind === 'added'
-                        ? 'underline decoration-neutral-400 decoration-1 underline-offset-2'
-                        : undefined
-                  }
-                >
-                  {part.text}
-                </span>
-              ))}
-              {working ? <Caret /> : null}
-            </p>
-          ) : (
-            <p className="whitespace-pre-wrap">
-              {result}
-              {working ? <Caret /> : null}
-            </p>
-          )}
+        <div className="px-3 pt-2.5">
+          <div className="max-h-52 overflow-auto rounded-lg border border-neutral-200 bg-neutral-50 px-2.5 py-2 leading-relaxed">
+            {showingChanges ? (
+              <p className="whitespace-pre-wrap">
+                {diffWords(original ?? '', result).map((part, index) => (
+                  <span
+                    key={index}
+                    className={
+                      part.kind === 'removed'
+                        ? 'text-neutral-400 line-through'
+                        : part.kind === 'added'
+                          ? 'underline decoration-neutral-400 decoration-1 underline-offset-2'
+                          : undefined
+                    }
+                  >
+                    {part.text}
+                  </span>
+                ))}
+                {working ? <Caret /> : null}
+              </p>
+            ) : (
+              <p className="whitespace-pre-wrap">
+                {result}
+                {working ? <Caret /> : null}
+              </p>
+            )}
+          </div>
         </div>
       ) : null}
 
       {result && original ? (
-        <div className="border-t border-neutral-100 px-3 py-1">
+        <div className="px-3 pt-1.5">
           <button
             type="button"
             aria-pressed={showingChanges}
             onClick={() => setPlainResult(showingChanges)}
-            className="rounded-md px-1.5 py-0.5 text-[11px] text-neutral-500 transition-colors hover:text-neutral-900"
+            className={`${GHOST} ${RING}`}
           >
             {showingChanges ? 'Show result' : 'Show changes'}
           </button>
@@ -371,28 +402,31 @@ export function Bar({
       ) : null}
 
       {status === 'ready' || status === 'error' ? (
-        <div className="flex flex-wrap items-center gap-1 border-t border-neutral-100 bg-neutral-50 px-3 py-1.5">
-          {REFINEMENTS.map((refinement) => (
-            <button
-              key={refinement.id}
-              type="button"
-              aria-pressed={refinements?.includes(refinement.id) ?? false}
-              onClick={() => onRefine?.(refinement.id)}
-              className={`rounded-full px-2 py-0.5 text-[11px] transition-colors ${
-                refinements?.includes(refinement.id)
-                  ? 'bg-neutral-900 text-white'
-                  : 'text-neutral-600 hover:bg-neutral-200'
-              }`}
-            >
-              {refinement.label}
-            </button>
-          ))}
+        <div className="mt-2.5 flex flex-wrap items-center gap-1 border-t border-neutral-100 bg-neutral-50 px-3 py-1.5">
+          {/* Refinements act on a result. After a failure there is nothing to refine, only to retry. */}
+          {result
+            ? REFINEMENTS.map((refinement) => (
+                <button
+                  key={refinement.id}
+                  type="button"
+                  aria-pressed={refinements?.includes(refinement.id) ?? false}
+                  onClick={() => onRefine?.(refinement.id)}
+                  className={`rounded-full border px-2 py-0.5 text-[11px] transition-colors ${RING} ${
+                    refinements?.includes(refinement.id)
+                      ? 'border-neutral-900 bg-neutral-900 text-white'
+                      : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:text-neutral-900'
+                  }`}
+                >
+                  {refinement.label}
+                </button>
+              ))
+            : null}
           <button
             type="button"
             aria-label="Try again"
             title="Try again"
             onClick={onRetry}
-            className="ml-auto rounded-md px-1.5 py-0.5 text-[11px] text-neutral-500 transition-colors hover:text-neutral-900"
+            className={`ml-auto rounded-md border border-neutral-200 bg-white px-1.5 py-0.5 text-[11px] text-neutral-500 transition-colors hover:border-neutral-300 hover:text-neutral-900 ${RING}`}
           >
             ↻
           </button>
@@ -400,7 +434,11 @@ export function Bar({
       ) : null}
 
       {errorMessage ? (
-        <p className="border-t border-neutral-100 px-3 py-2.5 text-red-700">{errorMessage}</p>
+        <div className="px-3 pt-2.5">
+          <p className="rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-red-800">
+            {errorMessage}
+          </p>
+        </div>
       ) : null}
 
       <p className="border-t border-neutral-100 bg-neutral-50 px-3 py-1.5 text-[11px] text-neutral-500">
@@ -412,7 +450,7 @@ export function Bar({
 
 function Caret() {
   return (
-    <span className="ml-0.5 inline-block h-3.5 w-1.5 translate-y-0.5 animate-pulse rounded-sm bg-neutral-400" />
+    <span className="ml-0.5 inline-block h-3.5 w-1.5 translate-y-0.5 rounded-sm bg-neutral-400 motion-safe:animate-pulse" />
   );
 }
 
@@ -420,13 +458,15 @@ function Spinner() {
   return (
     <span
       aria-hidden
-      className="h-3 w-3 animate-spin rounded-full border-[1.5px] border-white/30 border-t-white"
+      className="h-3 w-3 rounded-full border-[1.5px] border-white/30 border-t-white motion-safe:animate-spin"
     />
   );
 }
 
 function SkeletonLine({ width }: { width: string }) {
-  return <div className="h-2.5 animate-pulse rounded bg-neutral-100" style={{ width }} />;
+  return (
+    <div className="h-2.5 rounded bg-neutral-100 motion-safe:animate-pulse" style={{ width }} />
+  );
 }
 
 /**
@@ -479,10 +519,11 @@ function Chip({
     <button
       type="button"
       onClick={() => setEditing(true)}
-      className={`inline-flex items-baseline gap-1 rounded-full border px-2 py-0.5 transition-colors ${
+      aria-label={`${label}: ${value ?? fallback}. Change it`}
+      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 transition-colors ${RING} ${
         value
-          ? 'border-transparent bg-neutral-100 text-neutral-900 hover:bg-neutral-200'
-          : 'border-dashed border-neutral-300 bg-white text-neutral-400 hover:border-neutral-500'
+          ? 'border-neutral-300 bg-white text-neutral-900 hover:border-neutral-500 hover:bg-neutral-50'
+          : 'border-dashed border-neutral-300 bg-white text-neutral-500 hover:border-neutral-500 hover:text-neutral-900'
       }`}
     >
       <span className="text-[11px] text-neutral-400">{label}</span>
@@ -494,6 +535,9 @@ function Chip({
         />
       ) : null}
       <span className="max-w-[11rem] truncate">{value ?? fallback}</span>
+      <span aria-hidden className="text-[9px] text-neutral-400">
+        ▾
+      </span>
     </button>
   );
 }
@@ -528,7 +572,7 @@ function TextEditor({
           }
           if (event.key === 'Escape') setDraft(value);
         }}
-        className="w-44 rounded-full border border-neutral-400 bg-white px-2 py-0.5 text-xs placeholder:text-neutral-400 focus:outline-none"
+        className={`w-44 rounded-full border border-neutral-400 bg-white px-2 py-0.5 text-xs placeholder:text-neutral-400 ${RING}`}
       />
       {listId ? (
         <datalist id={listId}>
@@ -553,17 +597,17 @@ function Segments<T extends string>({
   onSelect: (value: T) => void;
 }) {
   return (
-    <span className="inline-flex items-center gap-0.5 rounded-full border border-neutral-400 bg-white p-0.5">
+    <span className="inline-flex items-center gap-0.5 rounded-full border border-neutral-300 bg-white p-0.5">
       {options.map((value) => (
         <button
           key={value}
           type="button"
           aria-pressed={value === selected}
           onClick={() => onSelect(value)}
-          className={`rounded-full px-2 py-0.5 text-xs capitalize transition-colors ${
+          className={`rounded-full px-2 py-0.5 text-xs capitalize transition-colors ${RING} ${
             value === selected
               ? 'bg-neutral-900 text-white'
-              : 'text-neutral-500 hover:text-neutral-900'
+              : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
           }`}
         >
           {labels?.[value] ?? value}

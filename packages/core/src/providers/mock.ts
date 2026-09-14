@@ -4,8 +4,9 @@ import type { TransformTransport } from './types';
 export const MOCK_PREFIX = '[mock]';
 
 /**
- * Stands in for a real transport in dev and E2E runs, where no key may ever be present.
- * It reports a real transport id so call sites exercise the same code path.
+ * A transport double for unit tests, where no key may ever be present. It reports a real transport
+ * id so call sites exercise the same code path. Nothing in the product falls back to it: a
+ * transform runs on the model the user configured, or it reports why it cannot.
  */
 export function createMockTransport(
   respond: (prompt: CompiledPrompt) => string = defaultRespond,

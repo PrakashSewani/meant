@@ -11,9 +11,14 @@ import {
   summarizeEvents,
   type EventSummary,
 } from '@meant/core';
-import { validateConfig, type MeantConfig } from '@meant/config';
+import {
+  ACTIVE_CONFIG_KEY,
+  CONFIGS_KEY,
+  LEGACY_CONFIG_KEY,
+  configLibrary,
+  readActiveConfig,
+} from '@meant/config';
 
-const CONFIG_KEY = 'meant.config';
 const SECRETS_KEY = 'meant.secrets';
 const EVENTS_KEY = 'meant.events';
 const CONTENT_SCRIPT = '/content-scripts/content.js';
@@ -30,6 +35,7 @@ interface TabInfo {
 
 function Popup() {
   const [model, setModel] = useState<string>();
+  const [configName, setConfigName] = useState<string>();
   const [hasKey, setHasKey] = useState(false);
   const [shortcut, setShortcut] = useState<string>();
   const [tab, setTab] = useState<TabInfo>();
@@ -44,12 +50,25 @@ function Popup() {
   }, []);
 
   async function readStatus() {
-    const stored = await browser.storage.local.get([CONFIG_KEY, SECRETS_KEY, EVENTS_KEY]);
-    const parsed = validateConfig(stored[CONFIG_KEY] as MeantConfig | undefined);
+    const stored = await browser.storage.local.get([
+      CONFIGS_KEY,
+      ACTIVE_CONFIG_KEY,
+      LEGACY_CONFIG_KEY,
+      SECRETS_KEY,
+      EVENTS_KEY,
+    ]);
+    const active = readActiveConfig(stored);
 
-    if (parsed.ok && parsed.config.model) {
-      const parts = parseModelRef(parsed.config.model);
-      setModel(parts ? `${parts.providerId} · ${parts.modelId}` : parsed.config.model);
+    if (active.ok && active.config.model) {
+      const parts = parseModelRef(active.config.model);
+      setModel(parts ? `${parts.providerId} · ${parts.modelId}` : active.config.model);
+    }
+
+    if (active.ok && active.source === 'library') {
+      const entry = configLibrary(stored).find(
+        (candidate) => candidate.id === stored[ACTIVE_CONFIG_KEY],
+      );
+      setConfigName(entry?.name);
     }
 
     const secrets = stored[SECRETS_KEY];
@@ -188,8 +207,12 @@ function Popup() {
 
       <dl className="mt-3 space-y-1 text-xs">
         <div className="flex justify-between gap-2">
+          <dt className="text-neutral-500">Config</dt>
+          <dd className="truncate">{configName ?? (model ? 'not saved' : 'none')}</dd>
+        </div>
+        <div className="flex justify-between gap-2">
           <dt className="text-neutral-500">Model</dt>
-          <dd>{model ?? 'not configured'}</dd>
+          <dd className="truncate">{model ?? 'not configured'}</dd>
         </div>
         <div className="flex justify-between gap-2">
           <dt className="text-neutral-500">Key</dt>
@@ -215,7 +238,7 @@ function Popup() {
         </p>
       ) : null}
 
-      <section className="mt-4 border-t border-neutral-100 pt-3">
+      <section className="mt-4 rounded-lg border border-neutral-200 p-3">
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs text-neutral-500">
             {tab?.host ? `On ${tab.host}` : 'This page'}
@@ -256,7 +279,7 @@ function Popup() {
       </section>
 
       {summary && summary.shown > 0 ? (
-        <section className="mt-4 border-t border-neutral-100 pt-3">
+        <section className="mt-4 rounded-lg border border-neutral-200 p-3">
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs text-neutral-500">Accepted this week</span>
             <span className="text-xs">

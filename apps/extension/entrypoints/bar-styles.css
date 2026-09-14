@@ -1,3 +1,42 @@
 /* The bar's stylesheet: same source as the pages, emitted as its own file so the worker can hand
    it to the injected bar. */
 @import '../lib/app.css';
+
+/*
+ * Tailwind's utilities read a few `--tw-*` custom properties whose defaults live in `@property`
+ * registrations. Those registrations do not take effect inside a shadow root, and this stylesheet
+ * is injected into one. Without them a plain `border` (which only reads `--tw-border-style`)
+ * computes to `none`, and `shadow-*` / `ring-*` (which read the shadow and ring defaults) drop
+ * their whole declaration — the bar renders with no borders and no shadow, while the popup and
+ * options page, which are ordinary documents, look right.
+ *
+ * The defaults are restated here so the bar does not depend on registrations it cannot have. The
+ * values are Tailwind v4's own, and the utilities that set one of these (border-dashed, ring-2)
+ * still win: they live in the utilities layer, which comes after this one.
+ */
+@layer base {
+  :host,
+  * {
+    --tw-border-style: solid;
+    --tw-shadow: 0 0 #0000;
+    --tw-inset-shadow: 0 0 #0000;
+    --tw-shadow-color: initial;
+    --tw-inset-shadow-color: initial;
+    --tw-ring-shadow: 0 0 #0000;
+    --tw-inset-ring-shadow: 0 0 #0000;
+    --tw-ring-offset-shadow: 0 0 #0000;
+    --tw-ring-offset-width: 0px;
+    --tw-ring-offset-color: #fff;
+    --tw-ring-color: currentcolor;
+    --tw-inset-ring-color: currentcolor;
+    --tw-space-y-reverse: 0;
+    --tw-translate-x: 0;
+    --tw-translate-y: 0;
+    --tw-translate-z: 0;
+    --tw-rotate-x: 0;
+    --tw-rotate-y: 0;
+    --tw-rotate-z: 0;
+    --tw-skew-x: 0;
+    --tw-skew-y: 0;
+  }
+}

@@ -3,6 +3,34 @@
 A lightweight decision log (ADR-style). Add an entry when a decision changes a **contract** —
 storage, privacy, architecture, or roadmap scope. Newest first.
 
+## D-007 — Configs are a library; keys belong to providers
+
+**Date:** 2026-09-14 · **Status:** Accepted
+
+**Decision.** Saved provider configurations live in a library (`meant.configs`) with one entry live
+at a time (`meant.activeConfig`). A config is a name plus a `MeantConfig`; keys stay in
+`meant.secrets`, keyed by **provider id**, shared by every config that uses that provider. The
+single-config `meant.config` is read as a fallback and removed when adopted. `@meant/config` owns
+the shape (`readActiveConfig`, `configLibrary`, `adoptLegacyConfig`), the worker resolves through
+it, and the options page is the only editor.
+
+**Why.** The docs already treat a config as portable data — `meant.config.json` is "what travels"
+(D-003). One config at a time made the menu unable to show what someone already had, and made
+switching mean re-typing. Duplicating keys per config would have been the tempting shortcut and the
+wrong one: deleting or switching a config would then silently lose a key, and the same provider
+would be re-authenticated for every config that mentions it.
+
+**Consequences.**
+
+- Switching is a pointer write: no request is fired, and the bar stays in its asking state
+  (invariant 4 — calls are user-initiated).
+- A config that is saved but unusable reports the reason instead of falling back to another config.
+  There is no silent substitution between configs, just as there is none between providers.
+- Adoption is a read, not a migration script: an existing `meant.config` keeps working, appears in
+  the menu named after its provider, and the legacy key is dropped in the same write.
+- The `MeantConfig` schema is unchanged, so the OpenCode subset in PROVIDERS §2 still holds and the
+  importer (when it ships) has one config shape to produce.
+
 ## D-006 — `execCommand('insertText')` is the sanctioned write primitive
 
 **Date:** 2026-09-13 · **Status:** Accepted

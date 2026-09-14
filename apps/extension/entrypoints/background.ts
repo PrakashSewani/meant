@@ -9,13 +9,13 @@ import {
   appendEvent,
   classifyError,
   compilePrompt,
-  createMockTransport,
   derivePriors,
   errorCopy,
   getRecipe,
+  modelFailureCopy,
   planDoctorChecks,
   readEvents,
-  resolveModel,
+  resolveModelOrReason,
   resolveRegister,
   runDoctorReport,
   signalsFromError,
@@ -23,27 +23,32 @@ import {
   type DoctorReport,
   type Effort,
   type ResolvedModel,
+  type ResolveModelInput,
   type StreamEvent,
   type TransformEvent,
 } from '@meant/core';
 import { BAR_SCRIPT_PATH, BAR_STYLES_PATH } from '../lib/bar-bridge';
 import { selectTransport } from '@meant/core/transports';
-import { validateConfig, type MeantConfig } from '@meant/config';
+import {
+  ACTIVE_CONFIG_KEY,
+  CONFIGS_KEY,
+  LEGACY_CONFIG_KEY,
+  readActiveConfig,
+  type ActiveConfigResult,
+  type MeantConfig,
+} from '@meant/config';
 
 const PORT_NAME = 'meant-transform';
-const CONFIG_KEY = 'meant.config';
 const SECRETS_KEY = 'meant.secrets';
 const EVENTS_KEY = 'meant.events';
 const PRIORS_KEY = 'meant.priors';
 const CONTEXT_MENU_ID = 'meant-invoke';
 const CONTENT_SCRIPT_PATH = '/content-scripts/content.js';
+const UNREADABLE_CONFIG = 'The saved configuration could not be read. Check it in Settings.';
+const CONFIG_KEYS = [CONFIGS_KEY, ACTIVE_CONFIG_KEY, LEGACY_CONFIG_KEY, SECRETS_KEY];
 
-const MOCK_MODEL: ResolvedModel = {
-  providerId: 'mock',
-  modelId: 'mock',
-  tier: 'main',
-  transport: 'openai-compatible',
-};
+/** A transform runs on the model the user configured, or it does not run at all. */
+type ModelChoice = { kind: 'model'; model: ResolvedModel } | { kind: 'problem'; message: string };
 
 export default defineBackground(() => {
   // The fallback path: a shortcut can be taken, or unassigned by Chrome, and the product must
@@ -122,14 +127,26 @@ async function handlePortMessage(
     recipe,
     refinements: request.refinements,
   });
-  const model = (await configuredModel(request.effort)) ?? MOCK_MODEL;
+  const choice = await configuredModel(request.effort);
 
-  // With nothing configured yet, the mock keeps the loop demo-able; the popup says so plainly.
-  const transport = model.providerId === 'mock' ? createMockTransport() : selectTransport(model);
+  // There is no answer to give without a model, and a made-up one reads as a working setup. Every
+  // reason a model is missing is a message instead: the bar says what is wrong, and nothing is
+  // written into anyone's field.
+  if (choice.kind === 'problem') {
+    post(port, {
+      type: 'error',
+      requestId: request.requestId,
+      kind: 'model_missing',
+      message: choice.message,
+    });
+    return;
+  }
+
+  const model = choice.model;
 
   try {
     await streamWithRetries({
-      transport,
+      transport: selectTransport(model),
       prompt,
       model,
       signal,
@@ -152,18 +169,47 @@ async function handlePortMessage(
 }
 
 async function runDoctorHere(): Promise<DoctorReport> {
-  const stored = await browser.storage.local.get([CONFIG_KEY, SECRETS_KEY]);
-  const parsed = validateConfig(stored[CONFIG_KEY]);
-  if (!parsed.ok) return { ok: false, message: 'No provider is configured yet.', checks: [] };
+  const stored = await browser.storage.local.get(CONFIG_KEYS);
+  const active = readActiveConfig(stored);
+  if (!active.ok) return { ok: false, message: configProblem(active), checks: [] };
 
-  const checks = planDoctorChecks({
-    refs: tierRefsOf(parsed.config),
-    providers: parsed.config.provider,
+  const input = {
+    refs: tierRefsOf(active.config),
+    providers: active.config.provider,
     secrets: readSecrets(stored[SECRETS_KEY]),
-    disabledProviders: parsed.config.disabled_providers,
-  });
+    disabledProviders: active.config.disabled_providers,
+  };
+
+  const checks = planDoctorChecks(input);
+  if (checks.length === 0) return { ok: false, message: missingModelReason(input), checks: [] };
 
   return runDoctorReport(checks, selectTransport);
+}
+
+/** The reasons the transform path reports, in the doctor's one-line form. */
+function configProblem(active: Extract<ActiveConfigResult, { ok: false }>): string {
+  switch (active.reason) {
+    case 'missing':
+      return modelFailureCopy({ ok: false, reason: 'not-configured' });
+    case 'no-active':
+      return 'No config is selected. Pick one in Settings.';
+    case 'invalid':
+      return UNREADABLE_CONFIG;
+  }
+}
+
+/**
+ * An empty plan has two very different causes — nothing configured, or something configured wrong
+ * — and the difference is the whole answer someone came to the doctor for.
+ */
+function missingModelReason(input: Omit<ResolveModelInput, 'effort'>): string {
+  for (const effort of ['quick', 'balanced', 'deep'] as const) {
+    const resolution = resolveModelOrReason({ ...input, effort });
+    if (!resolution.ok && resolution.reason !== 'not-configured')
+      return modelFailureCopy(resolution);
+  }
+
+  return 'No provider is configured yet.';
 }
 
 function post(port: Browser.runtime.Port, event: StreamEvent): void {
@@ -280,18 +326,22 @@ async function recordEvent(event: TransformEvent): Promise<void> {
   });
 }
 
-async function configuredModel(effort: Effort): Promise<ResolvedModel | undefined> {
-  const stored = await browser.storage.local.get([CONFIG_KEY, SECRETS_KEY]);
-  const parsed = validateConfig(stored[CONFIG_KEY]);
-  if (!parsed.ok) return undefined;
+async function configuredModel(effort: Effort): Promise<ModelChoice> {
+  const stored = await browser.storage.local.get(CONFIG_KEYS);
+  const active = readActiveConfig(stored);
+  if (!active.ok) return { kind: 'problem', message: configProblem(active) };
 
-  return resolveModel({
-    refs: tierRefsOf(parsed.config),
-    providers: parsed.config.provider,
+  const resolution = resolveModelOrReason({
+    refs: tierRefsOf(active.config),
+    providers: active.config.provider,
     secrets: readSecrets(stored[SECRETS_KEY]),
-    disabledProviders: parsed.config.disabled_providers,
+    disabledProviders: active.config.disabled_providers,
     effort,
   });
+
+  if (resolution.ok) return { kind: 'model', model: resolution.model };
+
+  return { kind: 'problem', message: modelFailureCopy(resolution) };
 }
 
 function tierRefsOf(config: MeantConfig): { fast?: string; main?: string; reasoning?: string } {

@@ -5,3 +5,6 @@ coverage
 .wxt
 pnpm-lock.yaml
 *.snap
+# Written by the taste-learning system, not by hand: the repo's formatting gate must not depend on
+# a file another process owns.
+.commandcode

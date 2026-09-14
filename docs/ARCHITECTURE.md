@@ -156,7 +156,9 @@ interface ResolvedModel {
 
 | Key                      | Contents                                                      | Notes                                                                                                           |
 | ------------------------ | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `meant.config`           | Provider config (OpenCode subset)                             | No secrets.                                                                                                     |
+| `meant.configs`          | Saved configs: a name and a provider config per entry         | The library. No secrets. One is live at a time.                                                                 |
+| `meant.activeConfig`     | Which library entry is live                                   | Points into `meant.configs`.                                                                                    |
+| `meant.config`           | Provider config (OpenCode subset)                             | Read as a fallback for a config saved before the library existed, and removed once adopted. No secrets.         |
 | `meant.secrets`          | API keys                                                      | Encrypted with AES-GCM + PBKDF2 if a passphrase is set; otherwise OS-protected extension storage. Never synced. |
 | `meant.voice`            | Learned Voice profile                                         | Local only, never sent except inside a prompt.                                                                  |
 | `meant.recipes`          | User recipes                                                  | Local; importable/exportable as JSON.                                                                           |
@@ -269,6 +271,11 @@ patterns wildcard the port by default, so `http://localhost/*` covers every loca
 
 - Mounted in a **closed shadow root** appended to `document.documentElement`, positioned with
   `anchor` from the current selection rect, flipping above/below and clamped to the viewport.
+- **Its stylesheet restates Tailwind's shadow-tree defaults.** Tailwind v4 utilities read `--tw-*`
+  custom properties whose defaults come from `@property` registrations, and those registrations do
+  not take effect inside a shadow root: a plain `border` computes to `none` and `shadow-*`/`ring-*`
+  drop their declaration. `entrypoints/bar-styles.css` sets the defaults explicitly, in the bar's
+  own stylesheet, so the injected bar looks like the popup and options page.
 - Invocation arrives from `chrome.commands` (browser-level shortcut → worker → the focused tab's
   content script), a grip click, or the context menu — never a page-level keydown. Chrome owns
   the `Ctrl+J` family (Downloads, DevTools console) and cannot be reliably preempted; when the
