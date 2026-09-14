@@ -1,6 +1,7 @@
 export { Bar } from './Bar';
 export { Mark } from './Mark';
 export { ThemeSwitch } from './ThemeSwitch';
+export { LABEL } from './styles';
 export type { BarAnchor, BarProps, BarStatus, RecipeChoice } from './Bar';
 export {
   THEMES,

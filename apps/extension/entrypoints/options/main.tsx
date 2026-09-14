@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
+  LABEL,
   Mark,
   THEME_KEY,
   ThemeSwitch,
@@ -275,23 +276,19 @@ function Options() {
   }
 
   return (
-    <main className="min-h-screen bg-neutral-100 px-6 py-10 text-sm text-neutral-800 dark:bg-neutral-950 dark:text-neutral-100">
-      <div className="mx-auto max-w-5xl">
+    <main className="min-h-screen bg-neutral-100 px-8 py-12 text-sm text-neutral-800 dark:bg-neutral-950 dark:text-neutral-100">
+      <div className="mx-auto max-w-6xl">
         <div className="flex flex-wrap items-center gap-3">
-          <Mark size={30} className="text-neutral-900 dark:text-neutral-100" />
-          <h1 className="text-xl font-semibold tracking-tight">Meant settings</h1>
+          <Mark size={28} className="text-neutral-900 dark:text-neutral-100" />
+          <h1 className="text-lg font-semibold tracking-tight">Meant settings</h1>
           <ThemeSwitch
             className="ml-auto"
             theme={theme}
             onChange={(next) => void chooseTheme(next)}
           />
         </div>
-        <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-          Your keys and configs stay in this browser profile. Nothing is sent anywhere except the
-          provider you pick.
-        </p>
 
-        <div className="mt-6">
+        <div className="mt-8 space-y-6">
           <ConfigMenu
             entries={stored.entries}
             activeId={stored.activeId}
@@ -307,86 +304,87 @@ function Options() {
             onRemoveKey={(providerId) => void removeKey(providerId)}
             onTest={() => void testConnection()}
           />
-        </div>
 
-        {report ? (
-          <section className="mt-6 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-            <h2 className="text-xs font-medium tracking-wide text-neutral-500 uppercase dark:text-neutral-400">
-              The live config
-            </h2>
-            <p
-              className={`mt-1 text-xs ${
-                report.ok
-                  ? 'text-neutral-600 dark:text-neutral-300'
-                  : 'text-neutral-800 dark:text-neutral-100'
-              }`}
-            >
-              {report.message}
-            </p>
-            <ul className="mt-3 space-y-1">
-              {report.checks.map((check) => (
-                <li key={check.label} className="flex gap-2 text-xs">
-                  <span
-                    aria-hidden
-                    className={
-                      check.ok
-                        ? 'text-neutral-500 dark:text-neutral-400'
-                        : 'text-red-700 dark:text-red-300'
-                    }
-                  >
-                    {check.ok ? '✓' : '✗'}
-                  </span>
-                  <span className="text-neutral-500 dark:text-neutral-400">{check.label}</span>
-                  <span
-                    className={
-                      check.ok
-                        ? 'text-neutral-500 dark:text-neutral-400'
-                        : 'text-red-700 dark:text-red-300'
-                    }
-                  >
-                    {check.ok ? '' : check.message}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
-
-        {Object.keys(priors).length > 0 ? (
-          <section className="mt-6 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-            <h2 className="text-xs font-medium tracking-wide text-neutral-500 uppercase dark:text-neutral-400">
-              What it has learned
-            </h2>
-            <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-              Corrections you keep making in the same place, applied next time. Stored on this
-              device, and forgettable one chip at a time.
-            </p>
-            <ul className="mt-3 space-y-1">
-              {Object.entries(priors).flatMap(([key, chips]) =>
-                Object.entries(chips).map(([chip, prior]) => (
-                  <li
-                    key={`${key}:${chip}`}
-                    className="flex items-center justify-between gap-3 text-xs"
-                  >
-                    <span className="text-neutral-500 dark:text-neutral-400">
-                      {key} · {chip}
-                    </span>
-                    <span className="flex-1 truncate font-mono">
-                      {Array.isArray(prior.value) ? prior.value.join(', ') : prior.value}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => void forget(key, chip as ChipKey)}
-                      className="text-neutral-500 underline dark:text-neutral-400"
+          {report ? (
+            <section className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+              <h2 className={`${LABEL}`}>The live config</h2>
+              <p
+                className={`mt-1 text-xs ${
+                  report.ok
+                    ? 'text-neutral-600 dark:text-neutral-300'
+                    : 'text-neutral-800 dark:text-neutral-100'
+                }`}
+              >
+                {report.message}
+              </p>
+              <ul className="mt-4 space-y-1.5">
+                {report.checks.map((check) => (
+                  <li key={check.label} className="flex gap-2 text-xs">
+                    <span
+                      aria-hidden
+                      className={
+                        check.ok
+                          ? 'text-neutral-400 dark:text-neutral-500'
+                          : 'text-red-700 dark:text-red-300'
+                      }
                     >
-                      Forget
-                    </button>
+                      {check.ok ? '✓' : '✗'}
+                    </span>
+                    <span className="text-neutral-500 dark:text-neutral-400">{check.label}</span>
+                    <span
+                      className={
+                        check.ok
+                          ? 'text-neutral-500 dark:text-neutral-400'
+                          : 'text-red-700 dark:text-red-300'
+                      }
+                    >
+                      {check.ok ? '' : check.message}
+                    </span>
                   </li>
-                )),
-              )}
-            </ul>
-          </section>
-        ) : null}
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
+          {Object.keys(priors).length > 0 ? (
+            <section className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+              <h2 className={LABEL}>What it has learned</h2>
+              <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                Corrections you keep making in the same place, applied next time. Stored on this
+                device, and forgettable one chip at a time.
+              </p>
+              <ul className="mt-3 space-y-1">
+                {Object.entries(priors).flatMap(([key, chips]) =>
+                  Object.entries(chips).map(([chip, prior]) => (
+                    <li
+                      key={`${key}:${chip}`}
+                      className="flex items-center justify-between gap-3 text-xs"
+                    >
+                      <span className="text-neutral-500 dark:text-neutral-400">
+                        {key} · {chip}
+                      </span>
+                      <span className="flex-1 truncate font-mono">
+                        {Array.isArray(prior.value) ? prior.value.join(', ') : prior.value}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => void forget(key, chip as ChipKey)}
+                        className="text-neutral-500 underline dark:text-neutral-400"
+                      >
+                        Forget
+                      </button>
+                    </li>
+                  )),
+                )}
+              </ul>
+            </section>
+          ) : null}
+
+          <p className="pt-2 text-[11px] text-neutral-400 dark:text-neutral-500">
+            Your keys and configs stay in this browser profile. Nothing is sent anywhere except the
+            provider you pick.
+          </p>
+        </div>
       </div>
     </main>
   );

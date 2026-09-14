@@ -27,13 +27,8 @@ export const GHOST =
 export const PRIMARY =
   'inline-flex items-center gap-1.5 rounded-md bg-neutral-900 px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-neutral-700 disabled:opacity-40 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300';
 
-/** A quiet heading for a settings section. */
-export const HEADING =
-  'text-xs font-medium tracking-wide text-neutral-500 uppercase dark:text-neutral-400';
+/** A field or group label. One size and weight everywhere, so nothing shouts. */
+export const LABEL = 'text-[11px] font-medium text-neutral-500 dark:text-neutral-400';
 
 /** Body text that is not the point of the screen. */
-export const MUTED = 'text-neutral-500 dark:text-neutral-400';
-
-/** The page behind the cards. */
-export const PAGE =
-  'min-h-screen bg-neutral-100 text-neutral-800 dark:bg-neutral-950 dark:text-neutral-100';
+export const MUTED = 'text-xs text-neutral-500 dark:text-neutral-400';
